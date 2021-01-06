@@ -29,6 +29,19 @@ export class CoreDirectives {
         return '*/}'
     }
     
+    public forelse(literal: WaxLiteral): string {
+        let obj: string = literal.text().split(/\s+/)[2]
+        return `var loopObj = ${obj};for${literal}{`
+    }
+    
+    public empty(): string {
+        return `} if(typeof loopObj !== "object" || Object.keys(loopObj).length < 1){`
+    }
+    
+    public endforelse(): string {
+        return '};delete loopObj'
+    }
+    
     public define(literal: WaxLiteral): string {
         return `scope[${literal.arg(0)}] = ${literal.arg(1)}`
     }

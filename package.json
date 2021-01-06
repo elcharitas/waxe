@@ -8,6 +8,7 @@
   },
   "scripts": {
     "test": "mocha",
+    "schip": "schip compile dist/example.wax",
     "build:src": "tsc -b src",
     "build:dist": "browserify lib/waxe.js -s Wax > dist/waxe.js",
     "build:ugly": "uglifyjs -c 'expression=true,unsafe_proto=true,unsafe=true' -m -o dist/waxe.min.js dist/waxe.js",

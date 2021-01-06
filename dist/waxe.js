@@ -36,13 +36,13 @@ function namefn(name, fn) {
 }
 exports.namefn = namefn;
 function bind(parser, source) {
-    var template = blob_1.WaxTemplate, holder;
+    var template = blob_1.WaxTemplate, holder = blob_1.WaxTemplate;
     try {
         holder = new Function('out, scope', "out+=" + source + ";return out");
         template = holder.bind(parser.core.configs.context, '');
-        template.source = holder.toString();
     }
     catch (e) { }
+    template.source = holder.toString();
     return template;
 }
 exports.bind = bind;
@@ -248,6 +248,16 @@ var CoreDirectives = /** @class */ (function () {
     };
     CoreDirectives.prototype.endswitch = function () {
         return '*/}';
+    };
+    CoreDirectives.prototype.forelse = function (literal) {
+        var obj = literal.text().split(/\s+/)[2];
+        return "var loopObj = " + obj + ";for" + literal + "{";
+    };
+    CoreDirectives.prototype.empty = function () {
+        return "} if(typeof loopObj !== \"object\" || Object.keys(loopObj).length < 1){";
+    };
+    CoreDirectives.prototype.endforelse = function () {
+        return '};delete loopObj';
     };
     CoreDirectives.prototype.define = function (literal) {
         return "scope[" + literal.arg(0) + "] = " + literal.arg(1);

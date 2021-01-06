@@ -11,11 +11,12 @@ export function namefn(name:string, fn: WaxTemplate): WaxTemplate {
 }
 
 export function bind(parser: Wax, source: string): WaxTemplate {
-    let template: WaxTemplate = WaxTemplate, holder: Function
+    let template: WaxTemplate = WaxTemplate
+        ,holder: Function = WaxTemplate
     try {
         holder = new Function('out, scope', `out+=${source};return out`)
         template = holder.bind(parser.core.configs.context, '')
-        template.source = holder.toString()
     } catch(e){}
+    template.source = holder.toString()
     return template
 }

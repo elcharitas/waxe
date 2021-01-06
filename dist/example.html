@@ -7,8 +7,12 @@
         <script src="./waxe.min.js" onload="setTimeout(Wax.parseEl, 5, 'title, #wax', { title: 'Waxe' })"></script>
     </head>
     <body id="wax" hidden>
+        @extends("tmpl")
         @comment('This would not be parsed')
         <h2>@yield($title)!</h2>
         <p>@yield('Always use single quotes!')</p>
+        @block("main")
+            Hi
+        @endblock
     </body>
 </html>
