@@ -321,26 +321,6 @@ module.exports = /** @class */ (function () {
     Wax.getConfigs = function () {
         return Wax.core.configs;
     };
-    Wax.template = function (name, text, config) {
-        if (config === void 0) { config = this.getConfigs(); }
-        if (typeof text === "string") {
-            return this.core.templates[name] = parser_1.genTemplate(parser_1.transpile.call(Wax, text, core_1.mkConfig(config, Wax.getDelimiter())), name);
-        }
-        else {
-            throw debug_1.dbg("text", text);
-        }
-    };
-    Wax.parseEl = function (selectors, context, visible) {
-        if (context === void 0) { context = {}; }
-        if (visible === void 0) { visible = true; }
-        if (typeof document !== "undefined") {
-            document.querySelectorAll(selectors).forEach(function (element) {
-                element.innerHTML = element.value = Wax.template(element.id, element.value || element.innerHTML)(context);
-                if ('hidden' in element)
-                    element.hidden = !visible;
-            });
-        }
-    };
     Wax.directive = function (tag, descriptor) {
         return this.core.tags[tag] = { tag: tag, descriptor: descriptor };
     };
@@ -361,6 +341,26 @@ module.exports = /** @class */ (function () {
         var _a = new classLabel(this).directives, directives = _a === void 0 ? {} : _a;
         for (var tag in directives) {
             this.directive(tag, directives[tag]);
+        }
+    };
+    Wax.template = function (name, text, config) {
+        if (config === void 0) { config = this.getConfigs(); }
+        if (typeof text === "string") {
+            return this.core.templates[name] = parser_1.genTemplate(parser_1.transpile.call(Wax, text, core_1.mkConfig(config, Wax.getDelimiter())), name);
+        }
+        else {
+            throw debug_1.dbg("text", text);
+        }
+    };
+    Wax.resolve = function (selectors, context, visible) {
+        if (context === void 0) { context = {}; }
+        if (visible === void 0) { visible = true; }
+        if (typeof document !== "undefined") {
+            document.querySelectorAll(selectors).forEach(function (element) {
+                element.innerHTML = element.value = Wax.template(element.id, element.value || element.innerHTML)(context);
+                if ('hidden' in element)
+                    element.hidden = !visible;
+            });
         }
     };
     Object.defineProperty(Wax, "core", {

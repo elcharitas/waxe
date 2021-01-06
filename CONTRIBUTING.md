@@ -2,10 +2,8 @@
 
 Clone this repo then run
 
-{% codeblock Install lang:sh %}
-``` sh
+``` zsh
 $ npm install
 ```
-{% endcodeblock %}
 
 *N/B*: Make necessary tests before making pull requests

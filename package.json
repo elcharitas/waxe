@@ -1,7 +1,7 @@
 {
   "name": "waxe",
-  "version": "0.0.1",
-  "description": "A laravel's blade inspired template engine",
+  "version": "0.0.2",
+  "description": "A zero dependency, Lightweight Laravel blade styled template engine for JavaScript",
   "main": "lib/waxe.js",
   "bin": {
     "waxe": "lib/cli.js"
@@ -22,7 +22,9 @@
     "template",
     "engine",
     "laravel",
-    "blade"
+    "blade",
+    "doT",
+    "lightweight"
   ],
   "author": "Jonathan Irhodia",
   "license": "MIT",
