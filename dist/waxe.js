@@ -131,9 +131,9 @@ var Walker = /** @class */ (function () {
         var _a;
         if (text === void 0) { text = this.text; }
         (_a = this.directives) === null || _a === void 0 ? void 0 : _a.forEach(function (block, position) {
-            var _a = block.match(_this.blockSyntax), _b = _this.tagName, tag = _a[_b], _c = _this.argList, _d = _a[_c], argLiteral = _d === void 0 ? '' : _d, result = '', node = null;
+            var _a = JSON.parse('"' + block + '"').match(_this.blockSyntax), _b = _this.tagName, tag = _a[_b], _c = _this.argList, _d = _a[_c], argLiteral = _d === void 0 ? '' : _d, _e = parser.core, configs = _e.configs, throwUndefined = _e.configs.throwUndefined, result = '', node = null;
             argLiteral = argLiteral.replace('$', '(scope||this).');
-            if (node = parser.getTag({ tag: tag, argLiteral: argLiteral, block: block, position: position })) {
+            if (node = parser.getTag({ tag: tag, argLiteral: argLiteral, block: block, position: position, configs: configs })) {
                 node.source = JSON.parse(_this.text);
                 result = node.descriptor.call(node, _this.toArgs(argLiteral));
             }
@@ -240,7 +240,7 @@ var CoreDirectives = /** @class */ (function () {
         return "} else if(" + literal + ") {";
     };
     CoreDirectives.prototype.else = function () {
-        return "} else {";
+        return '} else {';
     };
     CoreDirectives.prototype.switch = function (literal) {
         return "switch" + literal + "{/*";
@@ -262,20 +262,20 @@ var CoreDirectives = /** @class */ (function () {
         return "} if(typeof loopObj !== \"object\" || Object.keys(loopObj).length < 1){";
     };
     CoreDirectives.prototype.endforelse = function () {
-        return '};delete loopObj';
+        return "};delete loopObj";
     };
     CoreDirectives.prototype.define = function (literal) {
         return "scope[" + literal.arg(0) + "] = " + literal.arg(1);
     };
     CoreDirectives.prototype.yield = function (literal) {
-        return 'out+=' + literal.arg(0);
+        return "out+=" + literal;
     };
     CoreDirectives.prototype.bind = function (literal) {
         var hook = literal.arg(1), el = literal.arg(0);
         return "out+=this[\"bind" + el + "\"]=" + hook + ";setInterval(function(){\n            document.querySelectorAll(" + el + ").forEach(function(hook){\n                if(this[\"bind" + el + "\"] !== " + hook + "){\n                    hook.value = this[\"bind" + el + "\"] = " + hook + "\n                }\n            })\n        })";
     };
     CoreDirectives.prototype.comment = function (literal) {
-        return '/*' + literal.arg(0) + '*/';
+        return "/*" + literal + "*/";
     };
     return CoreDirectives;
 }());
@@ -312,21 +312,21 @@ module.exports = /** @class */ (function () {
         this.plugins = {};
         this.templates = {};
     }
-    Wax.setDelimiter = function (delimiter) {
-        return Wax.core.delimiter = delimiter;
-    };
-    Wax.getDelimiter = function () {
-        return Wax.core.delimiter;
-    };
-    Wax.getConfigs = function () {
-        return Wax.core.configs;
+    Wax.global = function (name, value) {
+        if (value === void 0) { value = null; }
+        return this.core.configs.context[name] = value;
     };
     Wax.directive = function (tag, descriptor) {
         return this.core.tags[tag] = { tag: tag, descriptor: descriptor };
     };
-    Wax.global = function (name, value) {
-        if (value === void 0) { value = null; }
-        return this.core.configs.context[name] = value;
+    Wax.setDelimiter = function (delimiter) {
+        return Wax.core.delimiter = delimiter;
+    };
+    Wax.getConfigs = function () {
+        return Wax.core.configs;
+    };
+    Wax.getDelimiter = function () {
+        return Wax.core.delimiter;
     };
     Wax.getTag = function (tagOpts) {
         var tagDef = this.core.tags[tagOpts.tag] || null;

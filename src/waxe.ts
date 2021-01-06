@@ -37,24 +37,24 @@ export = class Wax implements Wax {
         this.templates = {}
     }
     
-    public static setDelimiter(delimiter: WaxDelimiter): WaxDelimiter {
-        return Wax.core.delimiter = delimiter
-    }
-    
-    public static getDelimiter(): WaxDelimiter {
-        return Wax.core.delimiter
-    }
-    
-    public static getConfigs(): WaxConfig {
-        return Wax.core.configs
+    public static global(name: string, value: any = null): any {
+        return this.core.configs.context[name] = value;
     }
     
     public static directive(tag: string, descriptor: WaxNode["descriptor"]): WaxNode {
         return this.core.tags[tag] = {tag, descriptor}
     }
     
-    public static global(name: string, value: any = null): any{
-        return this.core.configs.context[name] = value;
+    public static setDelimiter(delimiter: WaxDelimiter): WaxDelimiter {
+        return Wax.core.delimiter = delimiter
+    }
+    
+    public static getConfigs(): WaxConfig {
+        return Wax.core.configs
+    }
+    
+    public static getDelimiter(): WaxDelimiter {
+        return Wax.core.delimiter
     }
     
     public static getTag(tagOpts: WaxTagOpts): WaxNode {

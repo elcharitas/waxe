@@ -35,12 +35,13 @@ export default class Walker implements WaxTreeRoot {
     {
         this.directives?.forEach((block: string, position: number) => {
             let { [this.tagName]: tag, [this.argList]: argLiteral = '' } = block.match(this.blockSyntax)
+                ,{ configs, configs: { throwUndefined } } = parser.core
                 ,result: string = ''
                 ,node: WaxNode = null
                 
             argLiteral = argLiteral.replace('$', '(scope||this).')
             
-            if (node = parser.getTag({tag, argLiteral, block, position})) {
+            if (node = parser.getTag({ tag, argLiteral, block, position, configs })) {
                 node.source = JSON.parse(this.text)
                 result = node.descriptor.call(node, this.toArgs(argLiteral))
             }

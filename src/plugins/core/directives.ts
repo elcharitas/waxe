@@ -10,7 +10,7 @@ export class CoreDirectives {
     }
 
     public else(): string {
-        return "} else {"
+        return '} else {'
     }
 
     public switch(literal: WaxLiteral): string {
@@ -39,7 +39,7 @@ export class CoreDirectives {
     }
     
     public endforelse(): string {
-        return '};delete loopObj'
+        return `};delete loopObj`
     }
     
     public define(literal: WaxLiteral): string {
@@ -47,7 +47,7 @@ export class CoreDirectives {
     }
 
     public yield(literal: WaxLiteral): string {
-        return 'out+='+literal.arg(0)
+        return `out+=${literal}`
     }
 
     public bind(literal: WaxLiteral): string {
@@ -63,6 +63,6 @@ export class CoreDirectives {
     }
 
     public comment(literal: WaxLiteral): string {
-        return '/*'+literal.arg(0)+'*/'
+        return `/*${literal}*/`
     }
 }

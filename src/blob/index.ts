@@ -26,10 +26,11 @@ type WaxTemplate = {
 }
 
 type WaxTagOpts = {
-    [opts: string]: NumStr,
+    [opts: string]: NumStr | WaxConfig,
     tag: string,
     argLiteral?: string,
     block?: string
+    config?: WaxConfig
 }
 
 interface WaxLiteral extends String  {
@@ -38,19 +39,28 @@ interface WaxLiteral extends String  {
 }
 
 interface WaxNode {
-    [opts: string]: NumStr | WaxNode["descriptor"]
+    [opts: string]: NumStr | WaxConfig | WaxNode["descriptor"]
     tag: string
     argLiteral?: string
     block?: string
     source?: string
     position?: number
+    configs?: WaxConfig
     descriptor: (this: WaxNode, literal?: WaxLiteral) => string
 }
 
 interface Wax {
     core: {
-        configs: WaxConfig
+        configs: WaxConfig,
+        delimiter: WaxDelimiter,
+        templates: {
+            [name: string]: WaxTemplate
+        }
     }
+    global(name: string, value: any): any
+    directive(tag: string, descriptor: WaxNode["descriptor"]): WaxNode
+    getConfigs(): WaxConfig
+    getDelimiter(): WaxDelimiter
     getTag: (tagOpts: WaxTagOpts) => WaxNode
 }
 
