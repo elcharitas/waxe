@@ -1,0 +1,35 @@
+{
+  "name": "waxe",
+  "version": "0.0.1",
+  "description": "A laravel's blade inspired template engine",
+  "main": "lib/waxe.js",
+  "bin": {
+    "waxe": "lib/cli.js"
+  },
+  "scripts": {
+    "test": "mocha",
+    "build:src": "tsc -b src",
+    "build:dist": "browserify lib/waxe.js -s Wax > dist/waxe.js",
+    "build:ugly": "uglifyjs -c 'expression=true,unsafe_proto=true,unsafe=true' -m -o dist/waxe.min.js dist/waxe.js",
+    "build": "run-s -s build:**"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/elcharitas/waxe.git"
+  },
+  "keywords": [
+    "template",
+    "engine",
+    "nunjucks",
+    "doT"
+  ],
+  "author": "Jonathan Irhodia",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/elcharitas/waxe/issues"
+  },
+  "homepage": "https://github.com/elcharitas/waxe#readme",
+  "devDependencies": {
+    "@types/node": "^14.14.20"
+  }
+}

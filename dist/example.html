@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title> Samples - @yield($title) </title>
+        <script src="./waxe.min.js" onload="setTimeout(Wax.parseEl, 5, 'title, #wax', { title: 'Waxe' })"></script>
+    </head>
+    <body id="wax" hidden>
+        @comment('This would not be parsed')
+        <h2>@yield($title)!</h2>
+        <p>@yield('Always use single quotes!')</p>
+    </body>
+</html>
