@@ -116,7 +116,7 @@ var Walker = /** @class */ (function () {
     function Walker(root) {
         if (root === void 0) { root = {}; }
         if (typeof this !== "object") {
-            throw debug_1.dbg(Walker, this);
+            throw debug_1.dbg("Walker", this);
         }
         this.directives = root.directives;
         this.argList = root.argList;
@@ -124,27 +124,32 @@ var Walker = /** @class */ (function () {
         this.tagName = root.tagName;
         this.text = root.text;
         this.endPrefix = root.endPrefix;
+        this.jsTags = ['for', 'if', 'while', 'switch'];
     }
     Walker.prototype.walk = function (parser, text) {
         var _this = this;
         var _a;
         if (text === void 0) { text = this.text; }
         (_a = this.directives) === null || _a === void 0 ? void 0 : _a.forEach(function (block, position) {
-            var _a = block.match(_this.blockSyntax), _b = _this.tagName, tag = _a[_b], _c = _this.argList, _d = _a[_c], argLiteral = _d === void 0 ? '' : _d, result = '', node;
+            var _a = block.match(_this.blockSyntax), _b = _this.tagName, tag = _a[_b], _c = _this.argList, _d = _a[_c], argLiteral = _d === void 0 ? '' : _d, result = '', node = null;
             argLiteral = argLiteral.replace('$', '(scope||this).');
             if (node = parser.getTag({ tag: tag, argLiteral: argLiteral, block: block, position: position })) {
                 node.source = JSON.parse(_this.text);
                 result = node.descriptor.call(node, _this.toArgs(argLiteral));
             }
-            else if (['for', 'if', 'while', 'switch'].indexOf(tag) > -1) {
+            else if (_this.jsTags.indexOf(tag) > -1) {
                 result = tag + argLiteral + '{';
             }
-            else if (tag.indexOf(_this.endPrefix) === 0) {
+            else if (_this.isBlockEnd(parser, tag)) {
                 result = '}';
             }
             text = text.replace(block, "\";" + result + "\nout+=\"");
         });
         return text;
+    };
+    Walker.prototype.isBlockEnd = function (parser, realTag, tag) {
+        if (tag === void 0) { tag = realTag.replace(this.endPrefix, ''); }
+        return realTag.indexOf(this.endPrefix) === 0 && (this.jsTags.indexOf(tag) > -1 || parser.getTag({ tag: tag }) !== null);
     };
     Walker.prototype.toArgs = function (literal) {
         var argLiteral = new String(literal);
@@ -344,13 +349,13 @@ module.exports = /** @class */ (function () {
         return this.core.configs.context[name] = value;
     };
     Wax.getTag = function (tagOpts) {
-        var tagDef = this.core.tags[tagOpts.tag];
-        if (typeof tagDef === "object") {
+        var tagDef = this.core.tags[tagOpts.tag] || null;
+        if (typeof tagDef === "object" && tagDef !== null) {
             for (var def in tagOpts) {
                 tagDef[def] = tagOpts[def];
             }
-            return tagDef;
         }
+        return tagDef;
     };
     Wax.addPlugin = function (classLabel) {
         var _a = new classLabel(this).directives, directives = _a === void 0 ? {} : _a;

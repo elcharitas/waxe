@@ -29,7 +29,7 @@ type WaxTagOpts = {
     [opts: string]: NumStr,
     tag: string,
     argLiteral?: string,
-    block: string
+    block?: string
 }
 
 interface WaxLiteral extends String  {

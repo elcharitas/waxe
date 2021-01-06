@@ -7,8 +7,6 @@ import { CoreWax } from "./plugins/core"
 
 export = class Wax implements Wax {
     
-    private static _core?: Wax
-    
     public configs: WaxConfig
     
     public delimiter: WaxDelimiter
@@ -20,11 +18,13 @@ export = class Wax implements Wax {
     public tags: {
         [tag: string]: WaxNode
     }
-    
+
     public plugins: {
         [label: string]: WaxPlugin
     }
-    
+
+    private static _core?: Wax
+
     private constructor()
     {
         if(typeof this !== "object") {
@@ -49,6 +49,31 @@ export = class Wax implements Wax {
         return Wax.core.configs
     }
     
+    public static directive(tag: string, descriptor: WaxNode["descriptor"]): WaxNode {
+        return this.core.tags[tag] = {tag, descriptor}
+    }
+    
+    public static global(name: string, value: any = null): any{
+        return this.core.configs.context[name] = value;
+    }
+    
+    public static getTag(tagOpts: WaxTagOpts): WaxNode {
+        let tagDef = this.core.tags[tagOpts.tag] || null
+        if(typeof tagDef === "object" && tagDef !== null){
+            for (let def in tagOpts) {
+                tagDef[def] = tagOpts[def]
+            }
+        }
+        return tagDef
+    }
+    
+    public static addPlugin(classLabel: WaxPluginConstructor){
+        let { directives = {} } = new classLabel(this)
+        for (let tag in directives) {
+            this.directive(tag, directives[tag])
+        }
+    }
+
     public static template(name: string, text: string, config: WaxConfig = this.getConfigs()): WaxTemplate
     {
         if(typeof text === "string") {
@@ -70,32 +95,7 @@ export = class Wax implements Wax {
             })
         }
     }
-    
-    public static directive(tag: string, descriptor: WaxNode["descriptor"]): WaxNode {
-        return this.core.tags[tag] = {tag, descriptor}
-    }
-    
-    public static global(name: string, value: any = null): any{
-        return this.core.configs.context[name] = value;
-    }
-    
-    public static getTag(tagOpts: WaxTagOpts): WaxNode {
-        let tagDef = this.core.tags[tagOpts.tag]
-        if(typeof tagDef === "object"){
-            for (let def in tagOpts) {
-                tagDef[def] = tagOpts[def]
-            }
-            return tagDef
-        }
-    }
-    
-    public static addPlugin(classLabel: WaxPluginConstructor){
-        let { directives = {} } = new classLabel(this)
-        for (let tag in directives) {
-            this.directive(tag, directives[tag])
-        }
-    }
-    
+
     /**
      * Gets or Creates the Wax instance
      *
