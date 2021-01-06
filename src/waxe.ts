@@ -86,7 +86,7 @@ export = class Wax implements Wax {
         }
     }
     
-    public static parseEl(selectors: string, context: WaxConfig["context"] = {}, visible: boolean = true): void
+    public static resolve(selectors: string, context: WaxConfig["context"] = {}, visible: boolean = true): void
     {
         if(typeof document !== "undefined"){
             document.querySelectorAll(selectors).forEach((element: any) => {
