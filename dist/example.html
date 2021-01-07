@@ -7,12 +7,8 @@
         <script src="./waxe.min.js" onload="setTimeout(Wax.resolve, 5, 'title, #wax', { title: 'Waxe' })"></script>
     </head>
     <body id="wax" hidden>
-        @extends("tmpl")
         @comment('This would not be parsed')
         <h2>@yield($title)!</h2>
         <p>@yield("All is permissible")</p>
-        @block("main")
-            Hi
-        @endblock
     </body>
 </html>
