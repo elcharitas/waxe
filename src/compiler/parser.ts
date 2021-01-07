@@ -1,12 +1,12 @@
 import { bind, namefn } from "./binder"
-import { traverse, WaxTreeRoot } from "./traverse"
-import { Wax, WaxConfig, WaxTemplate } from "../blob"
+import { traverse } from "./traverse"
+import { Wax, WaxConfig, WaxTemplate, WaxTreeRoot } from "../blob"
 import Walker from "./walker"
 
 export function transpile(this: Wax, source: string, config: WaxConfig): WaxTemplate {
     let treeRoot: WaxTreeRoot = traverse(source, config.delimiter)
     
-    let text = new Walker(treeRoot).walk(this)
+    let text = new Walker(this, treeRoot).walk()
     
     if(config.strip === true){
         text = text.replace(/\\n\s+/g, '')

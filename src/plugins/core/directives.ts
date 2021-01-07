@@ -47,7 +47,7 @@ export class CoreDirectives {
     }
 
     public yield(literal: WaxLiteral): string {
-        return `out+=${literal}`
+        return `out+=${literal.arg(0)||literal.arg(1)}`
     }
 
     public bind(literal: WaxLiteral): string {

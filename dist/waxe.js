@@ -78,7 +78,7 @@ var blob_1 = require("../blob");
 var walker_1 = __importDefault(require("./walker"));
 function transpile(source, config) {
     var treeRoot = traverse_1.traverse(source, config.delimiter);
-    var text = new walker_1.default(treeRoot).walk(this);
+    var text = new walker_1.default(this, treeRoot).walk();
     if (config.strip === true) {
         text = text.replace(/\\n\s+/g, '');
     }
@@ -94,7 +94,7 @@ exports.genTemplate = function (template, name) {
 },{"../blob":1,"./binder":2,"./traverse":5,"./walker":6}],5:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.traverse = void 0;
+exports.traverseNode = exports.traverse = void 0;
 function traverse(source, delimiter) {
     var argList = delimiter.argList, blockSyntax = delimiter.blockSyntax, tagName = delimiter.tagName, endPrefix = delimiter.endPrefix, text = JSON.stringify(source), directiveSyntax = "(" + blockSyntax + ")", directives = text.match(new RegExp(directiveSyntax, 'g'));
     return {
@@ -107,13 +107,28 @@ function traverse(source, delimiter) {
     };
 }
 exports.traverse = traverse;
+function traverseNode(walker, tagOpts) {
+    var tag = tagOpts.tag, argLiteral = tagOpts.argLiteral, result = '', node = null;
+    if (node = walker.parser.getTag(tagOpts)) {
+        result = node.descriptor.call(node, argLiteral);
+    }
+    else if (walker.jsTags.indexOf(tag) > -1) {
+        result = tag + argLiteral + '{';
+    }
+    else if (walker.isBlockEnd(tag)) {
+        result = '}';
+    }
+    return result;
+}
+exports.traverseNode = traverseNode;
 
 },{}],6:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var debug_1 = require("../debug");
+var traverse_1 = require("./traverse");
 var Walker = /** @class */ (function () {
-    function Walker(root) {
+    function Walker(parser, root) {
         if (root === void 0) { root = {}; }
         if (typeof this !== "object") {
             throw debug_1.dbg("Walker", this);
@@ -125,39 +140,32 @@ var Walker = /** @class */ (function () {
         this.text = root.text;
         this.endPrefix = root.endPrefix;
         this.jsTags = ['for', 'if', 'while', 'switch'];
+        this.parser = parser;
     }
-    Walker.prototype.walk = function (parser, text) {
+    Walker.prototype.walk = function (text) {
         var _this = this;
         var _a;
         if (text === void 0) { text = this.text; }
         (_a = this.directives) === null || _a === void 0 ? void 0 : _a.forEach(function (block, position) {
-            var _a = JSON.parse('"' + block + '"').match(_this.blockSyntax), _b = _this.tagName, tag = _a[_b], _c = _this.argList, _d = _a[_c], argLiteral = _d === void 0 ? '' : _d, _e = parser.core, configs = _e.configs, throwUndefined = _e.configs.throwUndefined, result = '', node = null;
-            argLiteral = argLiteral.replace('$', '(scope||this).');
-            if (node = parser.getTag({ tag: tag, argLiteral: argLiteral, block: block, position: position, configs: configs })) {
-                node.source = JSON.parse(_this.text);
-                result = node.descriptor.call(node, _this.toArgs(argLiteral));
-            }
-            else if (_this.jsTags.indexOf(tag) > -1) {
-                result = tag + argLiteral + '{';
-            }
-            else if (_this.isBlockEnd(parser, tag)) {
-                result = '}';
-            }
-            text = text.replace(block, "\";" + result + "\nout+=\"");
+            var _a = JSON.parse('"' + block + '"').match(_this.blockSyntax), _b = _this.tagName, tag = _a[_b], _c = _this.argList, _d = _a[_c], argList = _d === void 0 ? '' : _d, _e = _this.parser.core, _f = _e.configs, configs = _f === void 0 ? {} : _f, _g = _e.configs.context, context = _g === void 0 ? {} : _g, argLiteral = _this.toArgs(argList);
+            text = text.replace(block, "\";" + traverse_1.traverseNode(_this, { tag: tag, argLiteral: argLiteral, block: block, position: position, configs: configs, context: context }) + "\nout+=\"");
         });
         return text;
     };
-    Walker.prototype.isBlockEnd = function (parser, realTag, tag) {
+    Walker.prototype.isBlockEnd = function (realTag, tag) {
         if (tag === void 0) { tag = realTag.replace(this.endPrefix, ''); }
-        return realTag.indexOf(this.endPrefix) === 0 && (this.jsTags.indexOf(tag) > -1 || parser.getTag({ tag: tag }) !== null);
+        return realTag.indexOf(this.endPrefix) === 0 && (this.jsTags.indexOf(tag) > -1 || this.parser.getTag({ tag: tag }) !== null);
     };
-    Walker.prototype.toArgs = function (literal) {
-        var argLiteral = new String(literal);
+    Walker.prototype.toArgs = function (list) {
+        var argLiteral = new String(list);
         argLiteral.arg = function (key) {
             return "[" + argLiteral.text() + "][" + key + "]";
         };
+        argLiteral.build = function () {
+            return argLiteral.replace('$', '(scope||this).');
+        };
         argLiteral.text = function () {
-            return argLiteral.replace(/^\(([\s\S]*)\)$/, '$1');
+            return argLiteral.build().replace(/^\(([\s\S]*)\)$/, '$1');
         };
         return argLiteral;
     };
@@ -165,7 +173,7 @@ var Walker = /** @class */ (function () {
 }());
 exports.default = Walker;
 
-},{"../debug":7}],7:[function(require,module,exports){
+},{"../debug":7,"./traverse":5}],7:[function(require,module,exports){
 (function (global){(function (){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
@@ -268,7 +276,7 @@ var CoreDirectives = /** @class */ (function () {
         return "scope[" + literal.arg(0) + "] = " + literal.arg(1);
     };
     CoreDirectives.prototype.yield = function (literal) {
-        return "out+=" + literal;
+        return "out+=" + (literal.arg(0) || literal.arg(1));
     };
     CoreDirectives.prototype.bind = function (literal) {
         var hook = literal.arg(1), el = literal.arg(0);

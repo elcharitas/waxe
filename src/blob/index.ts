@@ -1,4 +1,4 @@
-type NumStr = number | string
+type NumStr = number | string | WaxLiteral
 
 type WaxConfig = {
     [opts: string]: any,
@@ -25,28 +25,42 @@ type WaxTemplate = {
     prototype: Function
 }
 
-type WaxTagOpts = {
-    [opts: string]: NumStr | WaxConfig,
-    tag: string,
-    argLiteral?: string,
+interface WaxTagOpts {
+    [opts: string]: NumStr | WaxConfig
+    tag?: string
+    argLiteral?: string | WaxLiteral
     block?: string
-    config?: WaxConfig
+    configs?: WaxConfig
+    context?: WaxConfig["context"]
 }
 
 interface WaxLiteral extends String  {
     arg?: (key: number) => any
     text?: () => string
+    build?: () => string
 }
 
-interface WaxNode {
+interface WaxNode extends WaxTagOpts {
     [opts: string]: NumStr | WaxConfig | WaxNode["descriptor"]
-    tag: string
-    argLiteral?: string
-    block?: string
     source?: string
     position?: number
-    configs?: WaxConfig
     descriptor: (this: WaxNode, literal?: WaxLiteral) => string
+}
+
+interface WaxTreeRoot {
+    text?: string,
+    directives?: RegExpMatchArray,
+    argList?: number,
+    blockSyntax?: string,
+    tagName?: number,
+    endPrefix?: string
+}
+
+interface WaxWalker extends WaxTreeRoot, WaxTagOpts {
+    [prop: string]: any
+    walk(): string
+    toArgs(argList: string): WaxLiteral
+    isBlockEnd(tag: string): boolean
 }
 
 interface Wax {
@@ -86,6 +100,8 @@ export {
     WaxConfig,
     WaxDelimiter,
     WaxTemplate,
+    WaxWalker,
+    WaxTreeRoot,
     WaxTagOpts,
     WaxLiteral,
     WaxNode,

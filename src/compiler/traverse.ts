@@ -1,15 +1,6 @@
-import { WaxDelimiter } from "../blob"
+import * as blob from "../blob"
 
-export interface WaxTreeRoot {
-    text?: string,
-    directives?: RegExpMatchArray,
-    argList?: number,
-    blockSyntax?: string,
-    tagName?: number,
-    endPrefix?: string
-}
-
-export function traverse(source: string, delimiter: WaxDelimiter): WaxTreeRoot {
+export function traverse(source: string, delimiter: blob.WaxDelimiter): blob.WaxTreeRoot {
     let { argList, blockSyntax, tagName, endPrefix } = delimiter
         ,text: string = JSON.stringify(source)
         ,directiveSyntax: string = `(${blockSyntax})`
@@ -22,4 +13,20 @@ export function traverse(source: string, delimiter: WaxDelimiter): WaxTreeRoot {
         tagName,
         endPrefix
     }
+}
+
+export function traverseNode(walker: blob.WaxWalker, tagOpts: blob.WaxTagOpts): string {
+    let { tag, argLiteral } = tagOpts
+        ,result: string = ''
+        ,node: blob.WaxNode = null
+    if (node = walker.parser.getTag(tagOpts)) {
+        result = node.descriptor.call(node, argLiteral)
+    }
+    else if (walker.jsTags.indexOf(tag) > -1) {
+        result = tag + argLiteral + '{'
+    }
+    else if (walker.isBlockEnd(tag)) {
+        result = '}'
+    }
+    return result
 }

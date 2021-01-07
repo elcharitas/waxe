@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/github/license/elcharitas/waxe)][3]
 [![Twitter: elcharitas](https://img.shields.io/twitter/follow/elcharitas.svg?style=social)](https://twitter.com/elcharitas)
 
-> A zero dependency, Lightweight Laravel blade styled template engine for JavaScript
+> A zero dependency, Laravel blade styled template engine for JavaScript
 
 ## Introduction
 
