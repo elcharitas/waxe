@@ -7,12 +7,25 @@ var WaxConfig = {
     throwUndefined: false,
     autoescape: true,
     context: {
-        now: Date.now()
+        startTime: Date.now(),
+        now: function () {
+            return Date.now();
+        },
+        merge: function (args) {
+            var _this = this;
+            if (args === void 0) { args = []; }
+            args = [].slice.call(args);
+            args.forEach(function (arg) {
+                for (var name_1 in arg) {
+                    _this[name_1] = arg[name_1];
+                }
+            });
+        }
     }
 };
 exports.WaxConfig = WaxConfig;
 var WaxDelimiter = {
-    blockSyntax: "@([_\\w]+)(\\(([^@]+)\\))*",
+    blockSyntax: "@(\\w+)([^@]+\\))?",
     tagName: 1,
     argList: 2,
     endPrefix: 'end',
@@ -36,10 +49,11 @@ function namefn(name, fn) {
 }
 exports.namefn = namefn;
 function bind(parser, source) {
+    var _a;
     var template = blob_1.WaxTemplate, holder = blob_1.WaxTemplate;
     try {
-        holder = new Function('out, scope', "out+=" + source + ";return out");
-        template = holder.bind(parser.core.configs.context, '');
+        holder = new Function('out', "this.merge(arguments);out+=" + source + ";return out");
+        template = holder.bind((_a = parser.getConfigs()) === null || _a === void 0 ? void 0 : _a.context, '');
     }
     catch (e) { }
     template.source = holder.toString();
@@ -67,6 +81,25 @@ exports.mkConfig = mkConfig;
 
 },{"../blob":1}],4:[function(require,module,exports){
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -74,19 +107,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.genTemplate = exports.transpile = void 0;
 var binder_1 = require("./binder");
 var traverse_1 = require("./traverse");
-var blob_1 = require("../blob");
+var blob = __importStar(require("../blob"));
 var walker_1 = __importDefault(require("./walker"));
-function transpile(source, config) {
+function transpile(parser, source, config) {
     var treeRoot = traverse_1.traverse(source, config.delimiter);
-    var text = new walker_1.default(this, treeRoot).walk();
+    var text = new walker_1.default(parser, treeRoot).walk();
     if (config.strip === true) {
         text = text.replace(/\\n\s+/g, '');
     }
-    return binder_1.bind(this, text);
+    return binder_1.bind(parser, text);
 }
 exports.transpile = transpile;
 exports.genTemplate = function (template, name) {
-    if (template === void 0) { template = blob_1.WaxTemplate; }
+    if (template === void 0) { template = blob.WaxTemplate; }
     if (name === void 0) { name = 'waxe-' + Date.now(); }
     return binder_1.namefn(name, template);
 };
@@ -113,7 +146,7 @@ function traverseNode(walker, tagOpts) {
         result = node.descriptor.call(node, argLiteral);
     }
     else if (walker.jsTags.indexOf(tag) > -1) {
-        result = tag + argLiteral + '{';
+        result = tag + argLiteral.parse() + '{';
     }
     else if (walker.isBlockEnd(tag)) {
         result = '}';
@@ -146,13 +179,14 @@ var Walker = /** @class */ (function () {
         var _this = this;
         var _a;
         if (text === void 0) { text = this.text; }
-        (_a = this.directives) === null || _a === void 0 ? void 0 : _a.forEach(function (block, position) {
-            var _a = JSON.parse('"' + block + '"').match(_this.blockSyntax), _b = _this.tagName, tag = _a[_b], _c = _this.argList, _d = _a[_c], argList = _d === void 0 ? '' : _d, _e = _this.parser.core, _f = _e.configs, configs = _f === void 0 ? {} : _f, _g = _e.configs.context, context = _g === void 0 ? {} : _g, argLiteral = _this.toArgs(argList);
-            text = text.replace(block, "\";" + traverse_1.traverseNode(_this, { tag: tag, argLiteral: argLiteral, block: block, position: position, configs: configs, context: context }) + "\nout+=\"");
+        (_a = this.directives) === null || _a === void 0 ? void 0 : _a.forEach(function (rawBlock, position) {
+            var block = JSON.parse("\"" + rawBlock + "\""), _a = block.match(_this.blockSyntax), _b = _this.tagName, tag = _a[_b], _c = _this.argList, _d = _a[_c], argList = _d === void 0 ? '' : _d, _e = _this.parser.core, _f = _e.configs, configs = _f === void 0 ? {} : _f, _g = _e.configs.context, context = _g === void 0 ? {} : _g, argLiteral = _this.toArgs(argList);
+            text = text.replace(rawBlock, "\";" + traverse_1.traverseNode(_this, { tag: tag, argLiteral: argLiteral, block: block, position: position, configs: configs, context: context }) + "\nout+=\"");
         });
         return text;
     };
     Walker.prototype.isBlockEnd = function (realTag, tag) {
+        if (realTag === void 0) { realTag = ""; }
         if (tag === void 0) { tag = realTag.replace(this.endPrefix, ''); }
         return realTag.indexOf(this.endPrefix) === 0 && (this.jsTags.indexOf(tag) > -1 || this.parser.getTag({ tag: tag }) !== null);
     };
@@ -161,11 +195,11 @@ var Walker = /** @class */ (function () {
         argLiteral.arg = function (key) {
             return "[" + argLiteral.text() + "][" + key + "]";
         };
-        argLiteral.build = function () {
-            return argLiteral.replace('$', '(scope||this).');
+        argLiteral.parse = function () {
+            return argLiteral.replace(/\$/g, 'this.');
         };
         argLiteral.text = function () {
-            return argLiteral.build().replace(/^\(([\s\S]*)\)$/, '$1');
+            return argLiteral.parse().replace(/^\(([\s\S]*)\)$/, '$1');
         };
         return argLiteral;
     };
@@ -256,8 +290,11 @@ var CoreDirectives = /** @class */ (function () {
     CoreDirectives.prototype.case = function (literal) {
         return "*/case " + literal + ":";
     };
-    CoreDirectives.prototype.break = function () {
+    CoreDirectives.prototype.break = function (literal) {
         return 'break;/*';
+    };
+    CoreDirectives.prototype.continue = function (literal) {
+        return "continue;";
     };
     CoreDirectives.prototype.endswitch = function () {
         return '*/}';
@@ -270,17 +307,29 @@ var CoreDirectives = /** @class */ (function () {
         return "} if(typeof loopObj !== \"object\" || Object.keys(loopObj).length < 1){";
     };
     CoreDirectives.prototype.endforelse = function () {
-        return "};delete loopObj";
+        return "};delete loopObj;";
     };
     CoreDirectives.prototype.define = function (literal) {
-        return "scope[" + literal.arg(0) + "] = " + literal.arg(1);
+        return "this[" + literal.arg(0) + "] = " + literal.arg(1) + ";";
     };
     CoreDirectives.prototype.yield = function (literal) {
-        return "out+=" + (literal.arg(0) || literal.arg(1));
+        return "out+=" + (literal.arg(0) || literal.arg(1)) + ";";
+    };
+    CoreDirectives.prototype.include = function (literal) {
+        return "out+=Wax.template(" + literal.arg(0) + ")(" + literal.arg(1) + ",this);";
+    };
+    CoreDirectives.prototype.includeIf = function (literal) {
+        return "out+=(Wax.template(" + literal.arg(0) + ")||new Function(\"return ''\"))(" + literal.arg(1) + ",this);";
+    };
+    CoreDirectives.prototype.includeWhen = function (literal) {
+        return "out+=" + literal.arg(0) + "?Wax.template(" + literal.arg(1) + ")(" + literal.arg(2) + ",this):\"\";";
     };
     CoreDirectives.prototype.bind = function (literal) {
         var hook = literal.arg(1), el = literal.arg(0);
-        return "out+=this[\"bind" + el + "\"]=" + hook + ";setInterval(function(){\n            document.querySelectorAll(" + el + ").forEach(function(hook){\n                if(this[\"bind" + el + "\"] !== " + hook + "){\n                    hook.value = this[\"bind" + el + "\"] = " + hook + "\n                }\n            })\n        })";
+        return "out+=this[\"bind" + el + "\"]=" + hook + ";setInterval(function(){\n            document.querySelectorAll(" + el + ").forEach(function(hook){\n                if(this[\"bind" + el + "\"] !== " + hook + "){\n                    hook.value = this[\"bind" + el + "\"] = " + hook + "\n                }\n            })\n        });";
+    };
+    CoreDirectives.prototype.json = function (literal) {
+        return "JSON.stringify" + literal;
     };
     CoreDirectives.prototype.comment = function (literal) {
         return "/*" + literal + "*/";
@@ -304,18 +353,37 @@ exports.CoreWax = CoreWax;
 
 },{"./directives":9}],11:[function(require,module,exports){
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var debug_1 = require("./debug");
 var core_1 = require("./compiler/core");
 var parser_1 = require("./compiler/parser");
-var blob_1 = require("./blob");
 var core_2 = require("./plugins/core");
+var blob = __importStar(require("./blob"));
 module.exports = /** @class */ (function () {
     function Wax() {
         if (typeof this !== "object") {
             throw debug_1.dbg("Wax", this);
         }
-        this.configs = blob_1.WaxConfig;
-        this.delimiter = blob_1.WaxDelimiter;
+        this.configs = blob.WaxConfig;
+        this.delimiter = blob.WaxDelimiter;
         this.tags = {};
         this.plugins = {};
         this.templates = {};
@@ -351,14 +419,12 @@ module.exports = /** @class */ (function () {
             this.directive(tag, directives[tag]);
         }
     };
-    Wax.template = function (name, text, config) {
+    Wax.template = function (name, source, config) {
         if (config === void 0) { config = this.getConfigs(); }
-        if (typeof text === "string") {
-            return this.core.templates[name] = parser_1.genTemplate(parser_1.transpile.call(Wax, text, core_1.mkConfig(config, Wax.getDelimiter())), name);
+        if (typeof source === "string") {
+            this.core.templates[name] = parser_1.genTemplate(parser_1.transpile(Wax, source, core_1.mkConfig(config, Wax.getDelimiter())), name);
         }
-        else {
-            throw debug_1.dbg("text", text);
-        }
+        return this.core.templates[name];
     };
     Wax.resolve = function (selectors, context, visible) {
         if (context === void 0) { context = {}; }

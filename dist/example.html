@@ -3,12 +3,14 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title> Samples - @yield($title) </title>
-        <script src="./waxe.min.js" onload="setTimeout(Wax.resolve, 5, 'title, #wax', { title: 'Waxe' })"></script>
+        <title id="title"> Samples - @yield($title) </title>
+        <script src="./waxe.js" onload="setTimeout(Wax.resolve, 5, 'title, #wax', { title: 'Waxe.js' })"></script>
     </head>
     <body id="wax" hidden>
-        @comment('This would not be parsed')
-        <h2>@yield($title)!</h2>
-        <p>@yield("All is permissible")</p>
+        @comment("This would not be parsed")
+        <h2>@yield($title)</h2>
+        <p>
+            @yield("Generated in "+ ($now() - $startTime) + "ms")
+        </p>
     </body>
 </html>

@@ -11,9 +11,9 @@
 
 Waxe, pronounced as Wax (/wæks/), came out of the need for a fast, less redundant, lightweight and pluggable JavaScript template engine.
 
-Waxe's core parser was highly inspired by [doT's][4] except Waxe is built to be pluggable whereas doT is built to be customizable.
+Waxe's core parser was highly inspired by [doT's] except Waxe is built to be pluggable whereas doT is built to be customizable.
 
-Waxe syntax is much similar to [Laravel's Template engine: Blade](https://laravel.com) and more importantly Waxe uses certain terminologies used in Blade like: directives and conditionals. However, other than this, Waxe is pretty neat with its own definitions.
+Waxe syntax is much similar to [Laravel's Template engine: Blade](https://laravel.com/docs/blade). However, more importantly Waxe uses certain terminologies used in Blade like: directives and conditionals apart from which Waxe is pretty neat on its own.
 
 ## Latest Release
 
@@ -40,14 +40,14 @@ This is ideal for testing purposes or in cases where in the use just cant be avo
 
 ``` html
 <script src="/path/to/waxe.min.js"></script>
-<script src="//cdn.jsdelivr.net/npm/package/waxe"></script>
+<script src="//cdn.jsdelivr.net/npm/waxe/dist/waxe.min.js"></script>
 ```
 
 ## Usage
 
 Frankly, the only method you need to get familiar with is `Wax.template` which takes two arguments, the `name` of the template and its `source`.
 
-This method returns a callable function much similar to [doT's][4] which can be reused anywhere by simply passing the context to use as an argument.
+This method returns a callable function much similar to [doT's] which can be reused anywhere by simply passing the context to use as an argument.
 
 ``` node
 const pagefn = Wax.template("sample", `@yield('Hello World')`)
@@ -87,5 +87,5 @@ This project is [MIT][3] licensed.
 [1]: https://img.shields.io/badge/version-0.0.1-yellow.svg?cacheSeconds=2592000
 [2]: https://npmjs.org/package/waxe
 [3]: https://github.com/elcharitas/waxe/blob/master/LICENSE
-[4]: https://github.com/olado/doT
 [5]: https://github.com/elcharitas/waxe#readme
+[doT's]: https://github.com/olado/doT

@@ -20,8 +20,9 @@ type WaxDelimiter = {
 }
 
 type WaxTemplate = {
-    (scope?: WaxConfig["context"]): string
+    (...scopes: WaxConfig["context"][]): string
     source?: string
+    merge?: (args: {[x: string]: any}[]) => void
     prototype: Function
 }
 
@@ -37,7 +38,7 @@ interface WaxTagOpts {
 interface WaxLiteral extends String  {
     arg?: (key: number) => any
     text?: () => string
-    build?: () => string
+    parse?: () => string
 }
 
 interface WaxNode extends WaxTagOpts {
@@ -63,14 +64,17 @@ interface WaxWalker extends WaxTreeRoot, WaxTagOpts {
     isBlockEnd(tag: string): boolean
 }
 
-interface Wax {
-    core: {
-        configs: WaxConfig,
-        delimiter: WaxDelimiter,
-        templates: {
-            [name: string]: WaxTemplate
-        }
+interface Waxer {
+    configs: WaxConfig,
+    delimiter: WaxDelimiter,
+    templates: {
+        [name: string]: WaxTemplate
     }
+}
+
+interface Wax {
+    prototype: Waxer
+    core: Waxer
     global(name: string, value: any): any
     directive(tag: string, descriptor: WaxNode["descriptor"]): WaxNode
     getConfigs(): WaxConfig
@@ -83,12 +87,25 @@ const WaxConfig: WaxConfig = {
     throwUndefined: false,
     autoescape: true,
     context: {
-        now: Date.now()
+        startTime: Date.now(),
+        now: function(): number {
+            return Date.now()
+        },
+        merge: function(this: WaxConfig["context"], args: WaxConfig["context"][] = []): void {
+            args = [].slice.call(args);
+            args.forEach(arg => {
+                for (let name in arg) {
+                    if(name !== "merge"){
+                        this[name] = arg[name]
+                    }
+                }
+            })
+        }
     }
 }
 
 const WaxDelimiter: WaxDelimiter = {
-    blockSyntax: "@([_\\w]+)(\\(([^@]+)\\))*",
+    blockSyntax: "@(\\w+)([^@]+\\))?",
     tagName: 1,
     argList: 2,
     endPrefix: 'end',
@@ -105,5 +122,6 @@ export {
     WaxTagOpts,
     WaxLiteral,
     WaxNode,
+    Waxer,
     Wax
 }

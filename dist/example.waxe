@@ -1,6 +1,2 @@
 @define('title', 'Waxe is Cool')
 @yield($title)
-
-@forelse(book in [])
-    Hi
-@endforelse

@@ -8,11 +8,12 @@
   },
   "scripts": {
     "test": "mocha",
-    "schip": "schip compile dist/example.wax",
+    "schip": "schip compile dist/example.waxe",
     "build:src": "tsc -b src",
     "build:dist": "browserify lib/waxe.js -s Wax > dist/waxe.js",
     "build:ugly": "uglifyjs -c 'expression=true,unsafe_proto=true,unsafe=true' -m -o dist/waxe.min.js dist/waxe.js",
-    "build": "run-s -s build:**"
+    "build": "run-s -s build:**",
+    "prepublishOnly": "rm -rf lib && npm run build"
   },
   "repository": {
     "type": "git",
@@ -37,6 +38,7 @@
     "browserify": "^17.0.0",
     "uglify-js": "^3.11.0",
     "npm-run-all": "^4.1.5",
+    "schip": "^0.0.1",
     "mocha": "^8.2.1"
   }
 }

@@ -14,8 +14,8 @@ export function bind(parser: Wax, source: string): WaxTemplate {
     let template: WaxTemplate = WaxTemplate
         ,holder: Function = WaxTemplate
     try {
-        holder = new Function('out, scope', `out+=${source};return out`)
-        template = holder.bind(parser.core.configs.context, '')
+        holder = new Function('out', `this.merge(arguments);out+=${source};return out`)
+        template = holder.bind(parser.getConfigs()?.context, '')
     } catch(e){}
     template.source = holder.toString()
     return template

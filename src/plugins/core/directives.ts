@@ -21,8 +21,12 @@ export class CoreDirectives {
         return `*/case ${literal}:`
     }
 
-    public break(){
+    public break(literal: WaxLiteral){
         return 'break;/*'
+    }
+    
+    public continue(literal: WaxLiteral){
+        return `continue;`
     }
 
     public endswitch(): string {
@@ -39,17 +43,29 @@ export class CoreDirectives {
     }
     
     public endforelse(): string {
-        return `};delete loopObj`
+        return `};delete loopObj;`
     }
     
     public define(literal: WaxLiteral): string {
-        return `scope[${literal.arg(0)}] = ${literal.arg(1)}`
+        return `this[${literal.arg(0)}] = ${literal.arg(1)};`
     }
 
     public yield(literal: WaxLiteral): string {
-        return `out+=${literal.arg(0)||literal.arg(1)}`
+        return `out+=${literal.arg(0)||literal.arg(1)};`
+    }
+    
+    public include(literal: WaxLiteral): string {
+        return `out+=Wax.template(${literal.arg(0)})(${literal.arg(1)},this);`
+    }
+    
+    public includeIf(literal: WaxLiteral): string {
+        return `out+=(Wax.template(${literal.arg(0)})||new Function("return ''"))(${literal.arg(1)},this);`
     }
 
+    public includeWhen(literal: WaxLiteral): string {
+        return `out+=${literal.arg(0)}?Wax.template(${literal.arg(1)})(${literal.arg(2)},this):"";`
+    }
+    
     public bind(literal: WaxLiteral): string {
         let hook: string = literal.arg(1)
             ,el: string = literal.arg(0)
@@ -59,7 +75,11 @@ export class CoreDirectives {
                     hook.value = this["bind${el}"] = ${hook}
                 }
             })
-        })`
+        });`
+    }
+    
+    public json(literal: WaxLiteral): string {
+        return `JSON.stringify${literal}`
     }
 
     public comment(literal: WaxLiteral): string {

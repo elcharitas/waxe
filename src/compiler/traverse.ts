@@ -23,7 +23,7 @@ export function traverseNode(walker: blob.WaxWalker, tagOpts: blob.WaxTagOpts): 
         result = node.descriptor.call(node, argLiteral)
     }
     else if (walker.jsTags.indexOf(tag) > -1) {
-        result = tag + argLiteral + '{'
+        result = tag + (argLiteral as blob.WaxLiteral).parse() + '{'
     }
     else if (walker.isBlockEnd(tag)) {
         result = '}'
