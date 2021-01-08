@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="assets/style.css?t=90051322">
+    <script src="assets/script.js?t=93f1a66c"></script>
+    <title>Waxe</title>
+    <meta name="viewport" content="width=device-width">
+  </head>
+  <body class="-menu-visible">
+    <div class="doc-layout">
+      <div class="toggle menu-toggle js-menu-toggle"></div>
+      <div class="menu toc-menu">
+        <ul>
+          <li class="menu-item -level-0 -parent">
+            <ul class="submenu">
+              <li class="menu-item -level-1"><a class="link title -active link-index" href="index.html">Waxe</a>
+              </li>
+              <li class="menu-item -level-1"><a class="link title link-introduction" href="#introduction">Introduction</a>
+              </li>
+              <li class="menu-item -level-1"><a class="link title link-latest-release" href="#latest-release">Latest Release</a>
+              </li>
+              <li class="menu-item -level-1"><a class="link title link-install" href="#install">Install</a>
+              </li>
+              <li class="menu-item -level-1"><a class="link title link-usage" href="#usage">Usage</a>
+              </li>
+              <li class="menu-item -level-1"><a class="link title link-author" href="#author">Author</a>
+              </li>
+              <li class="menu-item -level-1"><a class="link title link-contributing" href="#contributing">Contributing</a>
+              </li>
+              <li class="menu-item -level-1"><a class="link title link-show-your-support" href="#show-your-support">Show your support</a>
+              </li>
+              <li class="menu-item -level-1"><a class="link title link-license" href="#license">License</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+      <div class="body page-index">
+        <div class="header-nav">
+          <div class="right"><a class="iconlink" href="https://github.com/elcharitas/waxe" data-title="elcharitas/waxe">
+              <!-- span.title Open in GitHub--><span class="icon -github"></span></a>
+          </div>
+        </div>
+        <div class="markdown-body"><h1 id="waxe">Waxe</h1>
+<p><a href="https://npmjs.org/package/waxe"><img src="https://img.shields.io/badge/version-0.0.2-yellow.svg?cacheSeconds=2592000" alt="Version"></a>
+<a href="https://github.com/elcharitas/waxe#readme"><img src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" alt="Documentation"></a>
+<a href="https://github.com/elcharitas/waxe/graphs/commit-activity"><img src="https://img.shields.io/badge/Maintained%3F-yes-green.svg" alt="Maintenance"></a>
+<a href="https://github.com/elcharitas/waxe/blob/master/LICENSE"><img src="https://img.shields.io/github/license/elcharitas/waxe" alt="License: MIT"></a>
+<a href="https://twitter.com/elcharitas"><img src="https://img.shields.io/twitter/follow/elcharitas.svg?style=social" alt="Twitter: elcharitas"></a></p>
+<blockquote>
+<p>A zero dependency, Laravel blade styled template engine for JavaScript</p>
+</blockquote>
+<h2 id="introduction">Introduction</h2>
+<p>Waxe, pronounced as Wax (/w&#xE6;ks/), came out of the need for a fast, less redundant, lightweight and pluggable JavaScript template engine.</p>
+<p>Waxe&apos;s core parser was highly inspired by <a href="https://github.com/olado/doT">doT&apos;s</a> except Waxe is built to be pluggable whereas doT is built to be customizable.</p>
+<p>Waxe syntax is much similar to <a href="https://laravel.com/docs/blade">Laravel&apos;s Template engine: Blade</a>. However, more importantly Waxe uses certain terminologies used in Blade like: directives and conditionals apart from which Waxe is pretty neat on its own.</p>
+<h2 id="latest-release">Latest Release</h2>
+<p>The latest stable release of Waxe is <a href="https://img.shields.io/badge/version-0.0.2-yellow.svg?cacheSeconds=2592000">Latest Release</a>. Release notes can be found on the <a href="https://github.com/elcharitas/waxe">github repo</a>.</p>
+<p>Changelogs for each release are also available in the <code>CHANGELOG.md</code> file.</p>
+<h2 id="install">Install</h2>
+<p>Installing Waxe is pretty straight forward. Whether you&apos;re precompiling/rendering your templates or you simply want to use Waxe on the fly!</p>
+<h4 id="via-npm-or-yarn">Via NPM or Yarn?</h4>
+<p>Installing via npm or yarn is advised for production (remember to always precompile templates) or if you wish to use Waxe CLI</p>
+<pre><code class="lang-zsh">$ npm i -D waxe <span class="pl-c"># With NPM</span>
+$ yarn add waxe <span class="pl-c"># With Yarn</span>
+</code></pre>
+<h4 id="via-includes-or-cdns">Via Includes or CDNs</h4>
+<p>This is ideal for testing purposes or in cases where in the use just cant be avoided. I advise you avoid using this</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="pl-s">&quot;/path/to/waxe.min.js&quot;</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="pl-s">&quot;//cdn.jsdelivr.net/npm/waxe/dist/waxe.min.js&quot;</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+</code></pre>
+<h2 id="usage">Usage</h2>
+<p>Frankly, the only method you need to get familiar with is <code>Wax.template</code> which takes two arguments, the <code>name</code> of the template and its <code>source</code>.</p>
+<p>This method returns a callable function much similar to <a href="https://github.com/olado/doT">doT&apos;s</a> which can be reused anywhere by simply passing the context to use as an argument.</p>
+<pre><code class="lang-node">const pagefn = Wax.template(&quot;sample&quot;, `@yield(&apos;Hello World&apos;)`)
+
+console.log(
+    pagefn({})
+); //outputs &apos;Hello World&apos;
+</code></pre>
+<p>For more help on which directives Waxe supports and how to use the CLI, <a href="https://github.com/elcharitas/waxe#readme">check the official docs</a></p>
+<h2 id="author">Author</h2>
+<p><a href="https://elcharitas.com.ng"><strong>Jonathan Irhodia</strong></a></p>
+<ul>
+<li>Twitter: <a href="https://twitter.com/elcharitas">@elcharitas</a></li>
+<li>Github: <a href="https://github.com/elcharitas">@elcharitas</a></li>
+<li>LinkedIn: <a href="https://linkedin.com/in/elcharitas">@elcharitas</a></li>
+</ul>
+<h2 id="contributing">Contributing</h2>
+<p>Contributions, issues and feature requests are welcome!</p>
+<p>Feel free to check <a href="https://github.com/elcharitas/waxe/issues">issues page</a>. You can also take a look at the <a href="https://github.com/elcharitas/waxe/blob/master/CONTRIBUTING.md">contributing guide</a>.</p>
+<h2 id="show-your-support">Show your support</h2>
+<p>Give a &#x2B50;&#xFE0F; if this project helped you!</p>
+<h2 id="license">License</h2>
+<p>Copyright &#xA9; 2021 <a href="https://github.com/elcharitas">Jonathan Irhodia</a>.</p>
+<p>This project is <a href="https://github.com/elcharitas/waxe/blob/master/LICENSE">MIT</a> licensed.</p>
+
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

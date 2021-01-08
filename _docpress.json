@@ -1,0 +1,108 @@
+{
+  "toc": {
+    "sections": [
+      {
+        "title": "Waxe",
+        "source": "README.md",
+        "expand": true,
+        "url": "index.html",
+        "slug": "index",
+        "headings": [
+          {
+            "title": "Introduction",
+            "depth": 2,
+            "id": "introduction"
+          },
+          {
+            "title": "Latest Release",
+            "depth": 2,
+            "id": "latest-release"
+          },
+          {
+            "title": "Install",
+            "depth": 2,
+            "id": "install"
+          },
+          {
+            "title": "Usage",
+            "depth": 2,
+            "id": "usage"
+          },
+          {
+            "title": "Author",
+            "depth": 2,
+            "id": "author"
+          },
+          {
+            "title": "Contributing",
+            "depth": 2,
+            "id": "contributing"
+          },
+          {
+            "title": "Show your support",
+            "depth": 2,
+            "id": "show-your-support"
+          },
+          {
+            "title": "License",
+            "depth": 2,
+            "id": "license"
+          }
+        ]
+      }
+    ]
+  },
+  "index": {
+    "index.html": {
+      "source": "README.md",
+      "title": "Waxe",
+      "pageTitle": "Waxe",
+      "slug": "index",
+      "headings": [
+        {
+          "title": "Introduction",
+          "depth": 2,
+          "id": "introduction"
+        },
+        {
+          "title": "Latest Release",
+          "depth": 2,
+          "id": "latest-release"
+        },
+        {
+          "title": "Install",
+          "depth": 2,
+          "id": "install"
+        },
+        {
+          "title": "Usage",
+          "depth": 2,
+          "id": "usage"
+        },
+        {
+          "title": "Author",
+          "depth": 2,
+          "id": "author"
+        },
+        {
+          "title": "Contributing",
+          "depth": 2,
+          "id": "contributing"
+        },
+        {
+          "title": "Show your support",
+          "depth": 2,
+          "id": "show-your-support"
+        },
+        {
+          "title": "License",
+          "depth": 2,
+          "id": "license"
+        }
+      ]
+    }
+  },
+  "sources": {
+    "README.md": "index.html"
+  }
+}
