@@ -46,12 +46,28 @@ export class CoreDirectives {
         return `};delete loopObj;`
     }
     
+    public set(literal: WaxLiteral): string {
+        return `eval(${literal.arg(0)}+"="+${JSON.stringify(literal.arg(1))});`
+    }
+    
     public define(literal: WaxLiteral): string {
         return `this[${literal.arg(0)}] = ${literal.arg(1)};`
     }
+    
+    public macro(literal: WaxLiteral): string {
+        return `this[${literal.arg(0)}] = function(){var name = ${literal.arg(0)}; var call = this[name]; var args=[].slice.call(arguments);var out = "";`
+    }
+    
+    public endmacro(): string {
+        return `return out;}`
+    }
 
     public yield(literal: WaxLiteral): string {
-        return `out+=${literal.arg(0)||literal.arg(1)};`
+        return `out+=this.escape(${literal.arg(0)||literal.arg(1)});`
+    }
+    
+    public escape(literal: WaxLiteral): string {
+        return `out+=this.escape(${literal.arg(0)||literal.arg(1)});`
     }
     
     public include(literal: WaxLiteral): string {
@@ -79,7 +95,15 @@ export class CoreDirectives {
     }
     
     public json(literal: WaxLiteral): string {
-        return `JSON.stringify${literal}`
+        return `out+=JSON.stringify${literal}`
+    }
+    
+    public js(): string {
+        return 'var holdjs = out;'
+    }
+    
+    public endjs(): string {
+        return 'holdjs=out.split("").reverse().join("").replace(holdjs.split("").reverse().join(""), "").split("").reverse().join("");out=out.split("").reverse().join("").replace(holdjs.split("").reverse().join(""), "").split("").reverse().join("");try{eval(holdjs)} catch(e){};delete holdjs'
     }
 
     public comment(literal: WaxLiteral): string {

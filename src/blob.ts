@@ -1,3 +1,5 @@
+import { encodeJS, encodeHTML } from "./compiler"
+
 type NumStr = number | string | WaxLiteral
 
 type WaxConfig = {
@@ -91,21 +93,27 @@ const WaxConfig: WaxConfig = {
         now: function(): number {
             return Date.now()
         },
+        escape: function(text: string, useJs: boolean = false){
+            return (useJs? encodeJS: encodeHTML)(text)
+        },
         merge: function(this: WaxConfig["context"], args: WaxConfig["context"][] = []): void {
             args = [].slice.call(args);
             args.forEach(arg => {
                 for (let name in arg) {
-                    if(name !== "merge"){
-                        this[name] = arg[name]
-                    }
+                    this[name] = arg[name]
                 }
             })
         }
     }
 }
 
+Object.defineProperties(WaxConfig.context, {
+    merge: { writable: false, configurable: false },
+    escape: { writable: false, configurable: false }
+})
+
 const WaxDelimiter: WaxDelimiter = {
-    blockSyntax: "@(\\w+)([^@]+\\))?",
+    blockSyntax: "@(\\w+)(\\([^@]+\\))?",
     tagName: 1,
     argList: 2,
     endPrefix: 'end',

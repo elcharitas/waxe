@@ -1,5 +1,5 @@
 import { dbg } from "./debug"
-import { mkConfig } from "./compiler/core"
+import { mkConfig } from "./compiler"
 import { transpile, genTemplate } from "./compiler/parser"
 import { WaxPlugin, WaxPluginConstructor } from "./plugins"
 import { CoreWax } from "./plugins/core"

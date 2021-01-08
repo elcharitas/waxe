@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New Directives, [Access full list here][1]
 - Global `merge` to merge multiple contexts
 - New methods to *argLiterals* as `WaxLiteral`
+- `Wax.template` Tests
 - Types definition in `src/blob`
 
 ### Changed
@@ -18,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename Wax.parseEl to Wax.resolve
 - Autoblock Discosvery tag look up and parsing
 - Improved Package README.md
+- Improved File Structure
 
 ### Removed
 - Support for `lib` in vcs

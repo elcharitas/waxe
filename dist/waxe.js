@@ -2,6 +2,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WaxTemplate = exports.WaxDelimiter = exports.WaxConfig = void 0;
+var compiler_1 = require("./compiler");
 var WaxConfig = {
     strip: true,
     throwUndefined: false,
@@ -10,6 +11,10 @@ var WaxConfig = {
         startTime: Date.now(),
         now: function () {
             return Date.now();
+        },
+        escape: function (text, useJs) {
+            if (useJs === void 0) { useJs = false; }
+            return (useJs ? compiler_1.encodeJS : compiler_1.encodeHTML)(text);
         },
         merge: function (args) {
             var _this = this;
@@ -24,8 +29,12 @@ var WaxConfig = {
     }
 };
 exports.WaxConfig = WaxConfig;
+Object.defineProperties(WaxConfig.context, {
+    merge: { writable: false, configurable: false },
+    escape: { writable: false, configurable: false }
+});
 var WaxDelimiter = {
-    blockSyntax: "@(\\w+)([^@]+\\))?",
+    blockSyntax: "@(\\w+)(\\([^@]+\\))?",
     tagName: 1,
     argList: 2,
     endPrefix: 'end',
@@ -37,7 +46,7 @@ var WaxTemplate = function (context) {
 };
 exports.WaxTemplate = WaxTemplate;
 
-},{}],2:[function(require,module,exports){
+},{"./compiler":3}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.bind = exports.namefn = void 0;
@@ -55,7 +64,9 @@ function bind(parser, source) {
         holder = new Function('out', "this.merge(arguments);out+=" + source + ";return out");
         template = holder.bind((_a = parser.getConfigs()) === null || _a === void 0 ? void 0 : _a.context, '');
     }
-    catch (e) { }
+    catch (e) {
+        alert(e);
+    }
     template.source = holder.toString();
     return template;
 }
@@ -64,7 +75,7 @@ exports.bind = bind;
 },{"../blob":1}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.mkConfig = void 0;
+exports.encodeHTML = exports.encodeJS = exports.mkConfig = void 0;
 var blob_1 = require("../blob");
 function mkConfig(config, delimiter) {
     var cfg = blob_1.WaxConfig;
@@ -78,6 +89,44 @@ function mkConfig(config, delimiter) {
     return cfg;
 }
 exports.mkConfig = mkConfig;
+/**
+ * Encodes JavaScript to prevent malicious input
+ *
+ * @param {string} js - The suspected js
+ * @returns string
+ */
+function encodeJS(js) {
+    var encodeRules = {
+        "&": "&#38;",
+        "<": "&#60;",
+        ">": "&#62;",
+        '"': "&#34;",
+        "'": "&#39;",
+        "/": "&#47;",
+    };
+    var matchJS = /&(?!#?\w+;)|<|>|"|'|\//g;
+    return typeof js === "string" ? js.replace(matchJS, function (m) { return encodeRules[m] || m; }) : js;
+}
+exports.encodeJS = encodeJS;
+/**
+ * Encodes HTML to prevent malicious input
+ *
+ * @param {string} html - The suspected html
+ * @returns string
+ */
+function encodeHTML(html) {
+    var encodeRules = {
+        "&": "&#38;",
+        "<": "&#60;",
+        ">": "&#62;",
+        '"': "&#34;",
+        "'": "&#39;",
+        "/": "&#47;",
+    };
+    var matchHTML = /&(?!#?\w+;)|<|>|"|'|\//g;
+    return typeof html === "string" ? html.replace(matchHTML, function (m) { return encodeRules[m] || m; }) : html;
+}
+exports.encodeHTML = encodeHTML;
 
 },{"../blob":1}],4:[function(require,module,exports){
 "use strict";
@@ -309,11 +358,23 @@ var CoreDirectives = /** @class */ (function () {
     CoreDirectives.prototype.endforelse = function () {
         return "};delete loopObj;";
     };
+    CoreDirectives.prototype.set = function (literal) {
+        return "eval(" + literal.arg(0) + "+\"=\"+" + JSON.stringify(literal.arg(1)) + ");";
+    };
     CoreDirectives.prototype.define = function (literal) {
         return "this[" + literal.arg(0) + "] = " + literal.arg(1) + ";";
     };
+    CoreDirectives.prototype.macro = function (literal) {
+        return "this[" + literal.arg(0) + "] = function(){var name = " + literal.arg(0) + "; var call = this[name]; var args=[].slice.call(arguments);var out = \"\";";
+    };
+    CoreDirectives.prototype.endmacro = function () {
+        return "return out;}";
+    };
     CoreDirectives.prototype.yield = function (literal) {
-        return "out+=" + (literal.arg(0) || literal.arg(1)) + ";";
+        return "out+=this.escape(" + (literal.arg(0) || literal.arg(1)) + ");";
+    };
+    CoreDirectives.prototype.escape = function (literal) {
+        return "out+=this.escape(" + (literal.arg(0) || literal.arg(1)) + ");";
     };
     CoreDirectives.prototype.include = function (literal) {
         return "out+=Wax.template(" + literal.arg(0) + ")(" + literal.arg(1) + ",this);";
@@ -329,7 +390,13 @@ var CoreDirectives = /** @class */ (function () {
         return "out+=this[\"bind" + el + "\"]=" + hook + ";setInterval(function(){\n            document.querySelectorAll(" + el + ").forEach(function(hook){\n                if(this[\"bind" + el + "\"] !== " + hook + "){\n                    hook.value = this[\"bind" + el + "\"] = " + hook + "\n                }\n            })\n        });";
     };
     CoreDirectives.prototype.json = function (literal) {
-        return "JSON.stringify" + literal;
+        return "out+=JSON.stringify" + literal;
+    };
+    CoreDirectives.prototype.js = function () {
+        return 'var holdjs = out;';
+    };
+    CoreDirectives.prototype.endjs = function () {
+        return 'holdjs=out.split("").reverse().join("").replace(holdjs.split("").reverse().join(""), "").split("").reverse().join("");out=out.split("").reverse().join("").replace(holdjs.split("").reverse().join(""), "").split("").reverse().join("");try{eval(holdjs)} catch(e){};delete holdjs';
     };
     CoreDirectives.prototype.comment = function (literal) {
         return "/*" + literal + "*/";
@@ -373,9 +440,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 var debug_1 = require("./debug");
-var core_1 = require("./compiler/core");
+var compiler_1 = require("./compiler");
 var parser_1 = require("./compiler/parser");
-var core_2 = require("./plugins/core");
+var core_1 = require("./plugins/core");
 var blob = __importStar(require("./blob"));
 module.exports = /** @class */ (function () {
     function Wax() {
@@ -422,7 +489,7 @@ module.exports = /** @class */ (function () {
     Wax.template = function (name, source, config) {
         if (config === void 0) { config = this.getConfigs(); }
         if (typeof source === "string") {
-            this.core.templates[name] = parser_1.genTemplate(parser_1.transpile(Wax, source, core_1.mkConfig(config, Wax.getDelimiter())), name);
+            this.core.templates[name] = parser_1.genTemplate(parser_1.transpile(Wax, source, compiler_1.mkConfig(config, Wax.getDelimiter())), name);
         }
         return this.core.templates[name];
     };
@@ -446,7 +513,7 @@ module.exports = /** @class */ (function () {
         get: function () {
             if (!(this._core instanceof Wax)) {
                 this._core = new Wax;
-                Wax.addPlugin(core_2.CoreWax);
+                Wax.addPlugin(core_1.CoreWax);
             }
             return this._core;
         },
@@ -456,5 +523,5 @@ module.exports = /** @class */ (function () {
     return Wax;
 }());
 
-},{"./blob":1,"./compiler/core":3,"./compiler/parser":4,"./debug":7,"./plugins/core":10}]},{},[11])(11)
+},{"./blob":1,"./compiler":3,"./compiler/parser":4,"./debug":7,"./plugins/core":10}]},{},[11])(11)
 });
