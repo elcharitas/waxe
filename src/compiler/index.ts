@@ -13,27 +13,6 @@ export function mkConfig(config: WaxConfig, delimiter: WaxDelimiter): WaxConfig 
 }
 
 /**
- * Encodes JavaScript to prevent malicious input
- *
- * @param {string} js - The suspected js
- * @returns string
- */
-export function encodeJS(js: string): string {
-  const encodeRules: {[x: string]: string} = {
-    "&": "&#38;",
-    "<": "&#60;",
-    ">": "&#62;",
-    '"': "&#34;",
-    "'": "&#39;",
-    "/": "&#47;",
-  }
-
-  const matchJS: RegExp = /&(?!#?\w+;)|<|>|"|'|\//g
-  
-  return typeof js === "string" ? js.replace(matchJS, (m) => encodeRules[m] || m) : js
-}
-
-/**
  * Encodes HTML to prevent malicious input
  *
  * @param {string} html - The suspected html

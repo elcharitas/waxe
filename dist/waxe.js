@@ -12,9 +12,13 @@ var WaxConfig = {
         now: function () {
             return Date.now();
         },
-        escape: function (text, useJs) {
-            if (useJs === void 0) { useJs = false; }
-            return (useJs ? compiler_1.encodeJS : compiler_1.encodeHTML)(text);
+        escape: function (text, strict) {
+            if (strict === void 0) { strict = false; }
+            text = compiler_1.encodeHTML(text);
+            if (strict === true) {
+                text = (escape || String)(text);
+            }
+            return text;
         },
         merge: function (args) {
             var _this = this;
@@ -75,7 +79,7 @@ exports.bind = bind;
 },{"../blob":1}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.encodeHTML = exports.encodeJS = exports.mkConfig = void 0;
+exports.encodeHTML = exports.mkConfig = void 0;
 var blob_1 = require("../blob");
 function mkConfig(config, delimiter) {
     var cfg = blob_1.WaxConfig;
@@ -89,25 +93,6 @@ function mkConfig(config, delimiter) {
     return cfg;
 }
 exports.mkConfig = mkConfig;
-/**
- * Encodes JavaScript to prevent malicious input
- *
- * @param {string} js - The suspected js
- * @returns string
- */
-function encodeJS(js) {
-    var encodeRules = {
-        "&": "&#38;",
-        "<": "&#60;",
-        ">": "&#62;",
-        '"': "&#34;",
-        "'": "&#39;",
-        "/": "&#47;",
-    };
-    var matchJS = /&(?!#?\w+;)|<|>|"|'|\//g;
-    return typeof js === "string" ? js.replace(matchJS, function (m) { return encodeRules[m] || m; }) : js;
-}
-exports.encodeJS = encodeJS;
 /**
  * Encodes HTML to prevent malicious input
  *
@@ -212,9 +197,7 @@ var traverse_1 = require("./traverse");
 var Walker = /** @class */ (function () {
     function Walker(parser, root) {
         if (root === void 0) { root = {}; }
-        if (typeof this !== "object") {
-            throw debug_1.dbg("Walker", this);
-        }
+        debug_1.dbg("Walker", this);
         this.directives = root.directives;
         this.argList = root.argList;
         this.blockSyntax = root.blockSyntax;
@@ -279,12 +262,30 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.dbg = exports.formatDbg = void 0;
+exports.dbg = exports.formatDbg = exports.dbgType = exports.debugProp = exports.debugkit = void 0;
 var MessageList = __importStar(require("./messages.json"));
 var Message = MessageList;
+exports.debugkit = typeof global !== "undefined" ? global : window;
+function debugProp(object, property) {
+    return Object.prototype.hasOwnProperty.call(object, property);
+}
+exports.debugProp = debugProp;
+function dbgType(args, constraint, expected) {
+    if (typeof constraint !== typeof expected) {
+        args.push(typeof expected);
+    }
+    if (typeof constraint === "undefined" && typeof expected === "object") {
+        args.push("initialized");
+    }
+    else if (typeof expected !== "object") {
+        args.push("declared");
+    }
+    return args;
+}
+exports.dbgType = dbgType;
 function formatDbg(name, args) {
-    if (Message.hasOwnProperty(name)) {
-        var _a = Message, _b = name, _c = args.length - 1, _d = _a[_b][_c], msg_1 = _d === void 0 ? '' : _d;
+    if (debugProp(Message, name)) {
+        var _a = Message, _b = name, _c = args.length - 2, _d = _a[_b][_c], msg_1 = _d === void 0 ? '' : _d;
         args.forEach(function (arg, index) {
             msg_1 = msg_1.replace("%" + (index + 1), arg === null || arg === void 0 ? void 0 : arg.toString());
         });
@@ -292,21 +293,19 @@ function formatDbg(name, args) {
     }
 }
 exports.formatDbg = formatDbg;
-function dbg(check, constraint) {
-    var args = [], dbg;
-    switch (typeof check) {
-        case 'object':
-            if (constraint && !(check instanceof constraint)) {
-                dbg = "TypeError";
-                args.push(check, constraint);
-            }
-        default:
-            if (typeof check !== typeof constraint) {
-                dbg = "TypeError";
-                args.push(check.name || check, constraint ? typeof check : 'class', !constraint ? 'initialized' : 'declared');
-            }
+function dbg(check, constraint, expected, dbgFor) {
+    if (expected === void 0) { expected = {}; }
+    if (dbgFor === void 0) { dbgFor = "Type"; }
+    var args = [], debugArg = check === null || check === void 0 ? void 0 : check.toString(), debugStack = null;
+    dbgFor += "Error";
+    if (debugProp(exports.debugkit, dbgFor)) {
+        args = dbgType([check], constraint, expected);
+        debugStack = exports.debugkit[dbgFor];
+        debugArg = formatDbg(dbgFor, args);
     }
-    return dbg ? new (typeof global !== "undefined" ? global : window)[dbg](formatDbg(dbg, args)) : null;
+    if (args.length > 1 && debugStack !== null) {
+        throw new debugStack(debugArg);
+    }
 }
 exports.dbg = dbg;
 
@@ -314,7 +313,6 @@ exports.dbg = dbg;
 },{"./messages.json":8}],8:[function(require,module,exports){
 module.exports={
     "TypeError": [
-        null,
         "%1 should be of %2's type",
         "%1 should be %3 as a %2"
     ]
@@ -446,9 +444,7 @@ var core_1 = require("./plugins/core");
 var blob = __importStar(require("./blob"));
 module.exports = /** @class */ (function () {
     function Wax() {
-        if (typeof this !== "object") {
-            throw debug_1.dbg("Wax", this);
-        }
+        debug_1.dbg("Wax", this);
         this.configs = blob.WaxConfig;
         this.delimiter = blob.WaxDelimiter;
         this.tags = {};

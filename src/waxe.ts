@@ -27,9 +27,7 @@ export = class Wax implements blob.Waxer {
 
     private constructor()
     {
-        if(typeof this !== "object") {
-            throw dbg("Wax", this)
-        }
+        dbg("Wax", this)
         this.configs = blob.WaxConfig
         this.delimiter = blob.WaxDelimiter
         this.tags = {}

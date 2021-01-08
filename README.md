@@ -2,6 +2,7 @@
 [![Version][1]][2]
 [![Documentation](https://img.shields.io/badge/documentation-yes-brightgreen.svg)][5]
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/elcharitas/waxe/graphs/commit-activity)
+[![Code Climate](https://api.codeclimate.com/v1/badges/bc5e7f8301a50b961cb8/maintainability)](https://codeclimate.com/github/elcharitas/waxe/maintainability)
 [![License: MIT](https://img.shields.io/github/license/elcharitas/waxe)][3]
 [![Twitter: elcharitas](https://img.shields.io/twitter/follow/elcharitas.svg?style=social)](https://twitter.com/elcharitas)
 

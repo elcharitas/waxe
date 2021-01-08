@@ -1,4 +1,4 @@
-import { encodeJS, encodeHTML } from "./compiler"
+import { encodeHTML } from "./compiler"
 
 type NumStr = number | string | WaxLiteral
 
@@ -93,8 +93,12 @@ const WaxConfig: WaxConfig = {
         now: function(): number {
             return Date.now()
         },
-        escape: function(text: string, useJs: boolean = false){
-            return (useJs? encodeJS: encodeHTML)(text)
+        escape: function(text: string, strict: boolean = false){
+            text = encodeHTML(text)
+            if(strict === true){
+                text = (escape || String)(text)
+            }
+            return text
         },
         merge: function(this: WaxConfig["context"], args: WaxConfig["context"][] = []): void {
             args = [].slice.call(args);

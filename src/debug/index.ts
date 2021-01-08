@@ -4,13 +4,32 @@ const Message: {
     [type: string]: any
 } = MessageList
 
-declare var window: {
+export const debugkit: {
     [name: string]: any
+} = typeof global !== "undefined" ? global : window
+
+export function debugProp(object: any, property: string): boolean {
+    return Object.prototype.hasOwnProperty.call(object, property)
+}
+
+export function dbgType(args: string[], constraint: any, expected: any): string[] {
+    
+    if(typeof constraint !== typeof expected){
+        args.push(typeof expected)
+    }
+    
+    if(typeof constraint === "undefined" && typeof expected === "object"){
+        args.push("initialized")
+    } else if(typeof expected !== "object"){
+        args.push("declared")
+    }
+    
+    return args
 }
 
 export function formatDbg(name: string, args: string[]): string {
-    if(Message.hasOwnProperty(name)){
-        let { [name]: { [args.length - 1]: msg = '' } } = Message
+    if(debugProp(Message, name)){
+        let { [name]: { [args.length - 2]: msg = '' } } = Message
         args.forEach((arg: string, index: number) => {
             msg = msg.replace(`%${index+1}`, arg?.toString())
         })
@@ -18,21 +37,20 @@ export function formatDbg(name: string, args: string[]): string {
     }
 }
 
-export function dbg(check: any, constraint: any): string {
+export function dbg(check: any, constraint: any, expected: any = {}, dbgFor: string = "Type"): void {
     let args: string[] = []
-        ,dbg: string
-    switch(typeof check){
-        case 'object':
-            if (constraint && !(check instanceof constraint)) {
-                dbg = "TypeError"
-                args.push(check, constraint)
-            }
-        default:
-            if (typeof check !== typeof constraint) {
-                dbg = "TypeError"
-                args.push(check.name || check, constraint ? typeof check : 'class', !constraint ? 'initialized' : 'declared')
-            }
+        ,debugArg: string = check?.toString()
+        ,debugStack: typeof Error = null
+    
+    dbgFor += "Error"
+    
+    if(debugProp(debugkit, dbgFor)){
+        args = dbgType([check], constraint, expected)
+        debugStack = debugkit[dbgFor]
+        debugArg = formatDbg(dbgFor, args)
     }
     
-    return dbg ? new (typeof global !== "undefined" ? global: window)[dbg](formatDbg(dbg, args)): null
+    if(args.length > 1 && debugStack !== null){
+        throw new debugStack(debugArg)
+    }
 }

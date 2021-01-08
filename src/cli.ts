@@ -18,25 +18,27 @@ let { 2: action, 3: path } = process.argv
             case "version":
                 log(version)
             break;
-            default: action ? error("Unrecognized Command!")
-                : help()
+            default:
+                help(action)
+                error("Unrecognized Command or Action!")
         }
     }
-    ,help = (action?:string) => {
-        let cmdHelp: {
-            [command: string]: string
-        } = {
+    ,help = (action?: string) => {
+        let cmdHelp: { [command: string]: string } = {
             render: `[path]\tRenders a template`,
             compile: `[path]\tRenders a template`,
             version: '\tDisplays version info',
             help: '[topic]\tShows this help or help [topic]'
         }
+        ,commands: string = `\nStandard Commands:\n`
+        
         log(`Usage: waxe ${action||"[command]"} [path]\n`)
         log(description)
-        let commands: string = `\nStandard Commands:\n`
+        
         for(let command in cmdHelp){
             commands += `\t${command}\t${cmdHelp[command]}\n`
         }
+        
         log(commands)
     }
 

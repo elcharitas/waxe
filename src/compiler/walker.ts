@@ -21,9 +21,7 @@ export default class Walker implements blob.WaxWalker {
     public parser: blob.Wax
     
     public constructor(parser: blob.Wax, root: blob.WaxTreeRoot = {}){
-        if(typeof this !== "object") {
-            throw dbg("Walker", this)
-        }
+        dbg("Walker", this)
         this.directives = root.directives
         this.argList = root.argList
         this.blockSyntax = root.blockSyntax
