@@ -10,8 +10,7 @@ env:
  
 script:
 - npm i
-- npm test
-- docpress build
+- npm run docs
 - npm run build
  
 after_success:

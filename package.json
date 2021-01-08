@@ -10,7 +10,7 @@
   "scripts": {
     "test": "mocha",
     "schip": "schip compile dist/example.waxe",
-    "docpress": "docpress build",
+    "docs": "docpress build",
     "build:src": "tsc -b src",
     "build:types": "tsc -b src/tsconfig-types.json",
     "build:dist": "browserify lib/waxe.js -s Wax > dist/waxe.js",
