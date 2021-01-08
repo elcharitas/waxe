@@ -8,6 +8,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
+    "downlevelIteration": true,
     "moduleResolution": "node"
   }
 }
