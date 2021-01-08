@@ -10,12 +10,13 @@
   "scripts": {
     "test": "mocha",
     "schip": "schip compile dist/example.waxe",
+    "docpress": "docpress build",
     "build:src": "tsc -b src",
     "build:types": "tsc -b src/tsconfig-types.json",
     "build:dist": "browserify lib/waxe.js -s Wax > dist/waxe.js",
     "build:ugly": "uglifyjs -c 'expression=true,unsafe_proto=true,unsafe=true' -m -o dist/waxe.min.js dist/waxe.js",
     "build": "run-s -s build:**",
-    "prepublishOnly": "rm -rf lib && npm run build"
+    "prepublishOnly": "rm -rf lib && npm run build && npm t"
   },
   "repository": {
     "type": "git",
@@ -40,7 +41,14 @@
     "browserify": "^17.0.0",
     "uglify-js": "^3.11.0",
     "npm-run-all": "^4.1.5",
+    "docpress": "^0.8.2",
+    "git-update-ghpages": "^1.3.0",
     "schip": "^0.0.1",
     "mocha": "^8.2.1"
+  },
+  "docpress": {
+    "docs": "docs",
+    "dist": "docs/_dist",
+    "github": "elcharitas/waxe"
   }
 }

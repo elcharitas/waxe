@@ -1,0 +1,17 @@
+node_js:
+- 10
+ 
+env:
+  global:
+    - GIT_NAME: elcharitas
+    - GIT_EMAIL: jonathanirhodia@gmail.com
+    - GITHUB_REPO: elcharitas/waxe
+    - GIT_SOURCE: docs/_dist
+ 
+script:
+- npm test
+- docpress build
+- npm run build
+ 
+after_success:
+- if [ "$TRAVIS_BRANCH" = "master" -a "$TRAVIS_PULL_REQUEST" = "false" ]; then ./node_modules/.bin/git-update-ghpages -e; fi
