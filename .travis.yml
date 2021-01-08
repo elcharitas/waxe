@@ -9,6 +9,7 @@ env:
     - GIT_SOURCE: docs/_dist
  
 script:
+- npm i
 - npm test
 - docpress build
 - npm run build
