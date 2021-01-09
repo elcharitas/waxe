@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        @define('title', 'Waxe.js')
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title id="title"> Samples - @yield($title) </title>
+    </head>
+    <body id="wax" hidden>
+        <h2>@yield($title)</h2>
+        <p>
+            @yield("Generated in "+ ($now() - $startTime) + "ms")
+        </p>
+    </body>
+</html>

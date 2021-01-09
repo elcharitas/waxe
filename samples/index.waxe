@@ -1,2 +1,0 @@
-@define('title', 'Waxe is Cool')
-@yield($title)
