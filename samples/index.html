@@ -7,13 +7,9 @@
         <script src="../dist/waxe.js" onload="setTimeout(Wax.resolve, 5, 'title, #wax', { title: 'Waxe.js' })"></script>
     </head>
     <body id="wax" hidden>
-        @comment("This would not be parsed")
         <h2>@yield($title)</h2>
         <p>
             @yield("Generated in "+ ($now() - $startTime) + "ms")
         </p>
-        @js
-            this.name = 89;
-        @endjs
     </body>
 </html>

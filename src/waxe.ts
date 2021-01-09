@@ -3,7 +3,7 @@ import { mkConfig, WaxDelimiter, WaxConfig } from "./compiler"
 import { transpile, genTemplate } from "./compiler/parser"
 import { CoreWax } from "./plugins"
 
-export = class Wax implements Waxer {
+export = class Wax implements Wax {
     
     public configs: WaxConfig
     
@@ -63,7 +63,7 @@ export = class Wax implements Waxer {
         return tagDef
     }
     
-    public static addPlugin(classLabel: WaxPluginConstructor){
+    public static addPlugin(classLabel: WaxPluginConstruct){
         const { directives = {} } = new classLabel(this)
         for (const tag in directives) {
             this.directive(tag, directives[tag])

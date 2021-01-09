@@ -1,0 +1,13 @@
+{
+    "out": "_dist",
+    "name": "Waxe.js",
+    "theme": "minimal",
+    "exclude": "**/cli.ts",
+    "categoryOrder": [
+        "Cat !"
+    ],
+    "toc": [
+        "Wax"
+    ],
+    "disableOutputCheck": true
+}

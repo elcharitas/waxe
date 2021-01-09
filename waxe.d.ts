@@ -34,7 +34,7 @@ declare interface WaxPlugin {
     };
 }
 
-declare interface WaxPluginConstructor {
+declare interface WaxPluginConstruct {
     new(Wax: any): WaxPlugin;
     prototype: WaxPlugin;
 }
@@ -80,7 +80,7 @@ declare interface WaxWalker extends WaxTreeRoot, WaxTagOpts {
     isBlockEnd(tag: string): boolean;
 }
 
-declare interface Waxer {
+declare interface WaxConstruct {
     configs?: WaxConfig;
     delimiter?: WaxDelimiter;
     templates?: {
@@ -89,8 +89,8 @@ declare interface Waxer {
 }
 
 declare interface Wax {
-    prototype: Waxer;
-    core?: Waxer;
+    prototype: WaxConstruct;
+    core?: WaxConstruct;
     global(name: string, value: any): any;
     directive(tag: string, descriptor: WaxDescriptor): WaxNode;
     getConfigs(): WaxConfig;
