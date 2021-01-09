@@ -1,8 +1,31 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Wax = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.WaxTemplate = exports.WaxDelimiter = exports.WaxConfig = void 0;
-var compiler_1 = require("./compiler");
+exports.bind = exports.namefn = void 0;
+var _1 = require(".");
+function namefn(name, fn) {
+    var finalFn = (new Function("return function (call) { return function " + name + " () { return call(this, arguments) }; };")())(Function.apply.bind(fn));
+    finalFn.source = fn.source.replace('anonymous', name);
+    return finalFn;
+}
+exports.namefn = namefn;
+function bind(parser, source) {
+    var _a;
+    var template = _1.WaxTemplate, holder = _1.WaxTemplate;
+    try {
+        holder = new Function('out', "this.merge(arguments);out+=" + source + ";return out");
+        template = holder.bind((_a = parser.getConfigs()) === null || _a === void 0 ? void 0 : _a.context, '');
+    }
+    catch (e) { }
+    template.source = holder.toString();
+    return template;
+}
+exports.bind = bind;
+
+},{".":2}],2:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.encodeHTML = exports.mkConfig = exports.WaxDelimiter = exports.WaxTemplate = exports.WaxConfig = void 0;
 var WaxConfig = {
     strip: true,
     throwUndefined: false,
@@ -14,7 +37,7 @@ var WaxConfig = {
         },
         escape: function (text, strict) {
             if (strict === void 0) { strict = false; }
-            text = compiler_1.encodeHTML(text);
+            text = encodeHTML(text);
             if (strict === true) {
                 text = (escape || String)(text);
             }
@@ -29,6 +52,10 @@ var WaxConfig = {
                     _this[name_1] = arg[name_1];
                 }
             });
+        },
+        reverse: function (text, delimiter) {
+            if (delimiter === void 0) { delimiter = ""; }
+            return text.split(delimiter).reverse().join(delimiter);
         }
     }
 };
@@ -49,41 +76,9 @@ var WaxTemplate = function (context) {
     return null;
 };
 exports.WaxTemplate = WaxTemplate;
-
-},{"./compiler":3}],2:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.bind = exports.namefn = void 0;
-var blob_1 = require("../blob");
-function namefn(name, fn) {
-    var finalFn = (new Function("return function (call) { return function " + name + " () { return call(this, arguments) }; };")())(Function.apply.bind(fn));
-    finalFn.source = fn.source.replace('anonymous', name);
-    return finalFn;
-}
-exports.namefn = namefn;
-function bind(parser, source) {
-    var _a;
-    var template = blob_1.WaxTemplate, holder = blob_1.WaxTemplate;
-    try {
-        holder = new Function('out', "this.merge(arguments);out+=" + source + ";return out");
-        template = holder.bind((_a = parser.getConfigs()) === null || _a === void 0 ? void 0 : _a.context, '');
-    }
-    catch (e) {
-        alert(e);
-    }
-    template.source = holder.toString();
-    return template;
-}
-exports.bind = bind;
-
-},{"../blob":1}],3:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.encodeHTML = exports.mkConfig = void 0;
-var blob_1 = require("../blob");
 function mkConfig(config, delimiter) {
-    var cfg = blob_1.WaxConfig;
-    cfg.delimiter = blob_1.WaxDelimiter;
+    var cfg = WaxConfig;
+    cfg.delimiter = WaxDelimiter;
     for (var bar in delimiter) {
         cfg.delimiter[bar] = delimiter[bar];
     }
@@ -113,35 +108,16 @@ function encodeHTML(html) {
 }
 exports.encodeHTML = encodeHTML;
 
-},{"../blob":1}],4:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.genTemplate = exports.transpile = void 0;
+var _1 = require(".");
 var binder_1 = require("./binder");
 var traverse_1 = require("./traverse");
-var blob = __importStar(require("../blob"));
 var walker_1 = __importDefault(require("./walker"));
 function transpile(parser, source, config) {
     var treeRoot = traverse_1.traverse(source, config.delimiter);
@@ -153,12 +129,12 @@ function transpile(parser, source, config) {
 }
 exports.transpile = transpile;
 exports.genTemplate = function (template, name) {
-    if (template === void 0) { template = blob.WaxTemplate; }
+    if (template === void 0) { template = _1.WaxTemplate; }
     if (name === void 0) { name = 'waxe-' + Date.now(); }
     return binder_1.namefn(name, template);
 };
 
-},{"../blob":1,"./binder":2,"./traverse":5,"./walker":6}],5:[function(require,module,exports){
+},{".":2,"./binder":1,"./traverse":4,"./walker":5}],4:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.traverseNode = exports.traverse = void 0;
@@ -189,7 +165,7 @@ function traverseNode(walker, tagOpts) {
 }
 exports.traverseNode = traverseNode;
 
-},{}],6:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var debug_1 = require("../debug");
@@ -239,7 +215,7 @@ var Walker = /** @class */ (function () {
 }());
 exports.default = Walker;
 
-},{"../debug":7,"./traverse":5}],7:[function(require,module,exports){
+},{"../debug":6,"./traverse":4}],6:[function(require,module,exports){
 (function (global){(function (){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
@@ -310,7 +286,7 @@ function dbg(check, constraint, expected, dbgFor) {
 exports.dbg = dbg;
 
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./messages.json":8}],8:[function(require,module,exports){
+},{"./messages.json":7}],7:[function(require,module,exports){
 module.exports={
     "TypeError": [
         "%1 should be of %2's type",
@@ -318,7 +294,7 @@ module.exports={
     ]
 }
 
-},{}],9:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CoreDirectives = void 0;
@@ -374,6 +350,9 @@ var CoreDirectives = /** @class */ (function () {
     CoreDirectives.prototype.escape = function (literal) {
         return "out+=this.escape(" + (literal.arg(0) || literal.arg(1)) + ");";
     };
+    CoreDirectives.prototype.extends = function (literal) {
+        return "";
+    };
     CoreDirectives.prototype.include = function (literal) {
         return "out+=Wax.template(" + literal.arg(0) + ")(" + literal.arg(1) + ",this);";
     };
@@ -394,7 +373,7 @@ var CoreDirectives = /** @class */ (function () {
         return 'var holdjs = out;';
     };
     CoreDirectives.prototype.endjs = function () {
-        return 'holdjs=out.split("").reverse().join("").replace(holdjs.split("").reverse().join(""), "").split("").reverse().join("");out=out.split("").reverse().join("").replace(holdjs.split("").reverse().join(""), "").split("").reverse().join("");try{eval(holdjs)} catch(e){};delete holdjs';
+        return 'holdjs=this.reverse(out).replace(this.reverse(holdjs), "");out=this.reverse(this.reverse(out).replace(holdjs, ""));(new Function(this.reverse(holdjs))).bind(this)();delete holdjs';
     };
     CoreDirectives.prototype.comment = function (literal) {
         return "/*" + literal + "*/";
@@ -403,50 +382,37 @@ var CoreDirectives = /** @class */ (function () {
 }());
 exports.CoreDirectives = CoreDirectives;
 
-},{}],10:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.CoreDirectives = void 0;
+var directives_1 = require("./directives");
+Object.defineProperty(exports, "CoreDirectives", { enumerable: true, get: function () { return directives_1.CoreDirectives; } });
+
+},{"./directives":8}],10:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CoreWax = void 0;
-var directives_1 = require("./directives");
+var core_1 = require("./core");
 var CoreWax = /** @class */ (function () {
     function CoreWax(Wax) {
-        this.directives = new directives_1.CoreDirectives;
+        this.directives = new core_1.CoreDirectives;
     }
     return CoreWax;
 }());
 exports.CoreWax = CoreWax;
 
-},{"./directives":9}],11:[function(require,module,exports){
+},{"./core":9}],11:[function(require,module,exports){
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var debug_1 = require("./debug");
 var compiler_1 = require("./compiler");
 var parser_1 = require("./compiler/parser");
-var core_1 = require("./plugins/core");
-var blob = __importStar(require("./blob"));
+var plugins_1 = require("./plugins");
 module.exports = /** @class */ (function () {
     function Wax() {
         debug_1.dbg("Wax", this);
-        this.configs = blob.WaxConfig;
-        this.delimiter = blob.WaxDelimiter;
+        this.configs = compiler_1.WaxConfig;
+        this.delimiter = compiler_1.WaxDelimiter;
         this.tags = {};
         this.plugins = {};
         this.templates = {};
@@ -509,7 +475,7 @@ module.exports = /** @class */ (function () {
         get: function () {
             if (!(this._core instanceof Wax)) {
                 this._core = new Wax;
-                Wax.addPlugin(core_1.CoreWax);
+                Wax.addPlugin(plugins_1.CoreWax);
             }
             return this._core;
         },
@@ -519,5 +485,5 @@ module.exports = /** @class */ (function () {
     return Wax;
 }());
 
-},{"./blob":1,"./compiler":3,"./compiler/parser":4,"./debug":7,"./plugins/core":10}]},{},[11])(11)
+},{"./compiler":2,"./compiler/parser":3,"./debug":6,"./plugins":10}]},{},[11])(11)
 });

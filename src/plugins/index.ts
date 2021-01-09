@@ -1,17 +1,12 @@
-import { WaxNode } from "../blob"
+import { CoreDirectives } from "./core"
 
-interface WaxPlugin {
-    directives: {
-        [directive: string]: WaxNode["descriptor"]
+export class CoreWax implements WaxPlugin {
+
+    public directives: WaxPlugin["directives"]
+
+    public constructor(Wax: Wax) {
+
+        this.directives = new CoreDirectives
+
     }
-}
-
-type WaxPluginConstructor = {
-    new(Wax: any): WaxPlugin
-    prototype: WaxPlugin
-}
-
-export {
-    WaxPlugin,
-    WaxPluginConstructor
 }

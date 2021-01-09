@@ -1,8 +1,7 @@
 import { dbg } from "../debug"
 import { traverseNode } from "./traverse"
-import * as blob from "../blob"
 
-export default class Walker implements blob.WaxWalker {
+export default class Walker implements WaxWalker {
     
     public directives: RegExpMatchArray
     
@@ -18,9 +17,9 @@ export default class Walker implements blob.WaxWalker {
     
     public jsTags: string[]
     
-    public parser: blob.Wax
+    public parser: Wax
     
-    public constructor(parser: blob.Wax, root: blob.WaxTreeRoot = {}){
+    public constructor(parser: Wax, root: WaxTreeRoot = {}){
         dbg("Walker", this)
         this.directives = root.directives
         this.argList = root.argList
@@ -38,7 +37,7 @@ export default class Walker implements blob.WaxWalker {
             let block = JSON.parse(`"${rawBlock}"`)
                 ,{ [this.tagName]: tag, [this.argList]: argList = '' } = block.match(this.blockSyntax)
                 ,{ configs = {}, configs: { context = {} } } = this.parser.core
-                ,argLiteral: blob.WaxLiteral = this.toArgs(argList)
+                ,argLiteral: WaxLiteral = this.toArgs(argList)
             text = text.replace(rawBlock, `";${traverseNode(this, { tag, argLiteral, block, position, configs, context })}\nout+="`)
         })
         return text
@@ -48,8 +47,8 @@ export default class Walker implements blob.WaxWalker {
         return realTag.indexOf(this.endPrefix) === 0 && (this.jsTags.indexOf(tag) > -1 || this.parser.getTag({tag}) !== null)
     }
     
-    public toArgs(list: string): blob.WaxLiteral {
-        const argLiteral: blob.WaxLiteral = new String(list)
+    public toArgs(list: string): WaxLiteral {
+        const argLiteral: WaxLiteral = new String(list)
         
         argLiteral.arg = function(key: number): string {
             return `[${argLiteral.text()}][${key}]`

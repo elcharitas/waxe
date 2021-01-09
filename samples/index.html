@@ -12,5 +12,8 @@
         <p>
             @yield("Generated in "+ ($now() - $startTime) + "ms")
         </p>
+        @js
+            this.name = 89;
+        @endjs
     </body>
 </html>

@@ -1,22 +1,20 @@
 import { dbg } from "./debug"
-import { mkConfig } from "./compiler"
+import { mkConfig, WaxDelimiter, WaxConfig } from "./compiler"
 import { transpile, genTemplate } from "./compiler/parser"
-import { WaxPlugin, WaxPluginConstructor } from "./plugins"
-import { CoreWax } from "./plugins/core"
-import * as blob from "./blob"
+import { CoreWax } from "./plugins"
 
-export = class Wax implements blob.Waxer {
+export = class Wax implements Waxer {
     
-    public configs: blob.WaxConfig
+    public configs: WaxConfig
     
-    public delimiter: blob.WaxDelimiter
+    public delimiter: WaxDelimiter
     
     public templates: {
-        [name: string]: blob.WaxTemplate
+        [name: string]: WaxTemplate
     }
     
     public tags: {
-        [tag: string]: blob.WaxNode
+        [tag: string]: WaxNode
     }
 
     public plugins: {
@@ -28,8 +26,8 @@ export = class Wax implements blob.Waxer {
     private constructor()
     {
         dbg("Wax", this)
-        this.configs = blob.WaxConfig
-        this.delimiter = blob.WaxDelimiter
+        this.configs = WaxConfig
+        this.delimiter = WaxDelimiter
         this.tags = {}
         this.plugins = {}
         this.templates = {}
@@ -39,26 +37,26 @@ export = class Wax implements blob.Waxer {
         return this.core.configs.context[name] = value;
     }
     
-    public static directive(tag: string, descriptor: blob.WaxNode["descriptor"]): blob.WaxNode {
+    public static directive(tag: string, descriptor: WaxNode["descriptor"]): WaxNode {
         return this.core.tags[tag] = {tag, descriptor}
     }
     
-    public static setDelimiter(delimiter: blob.WaxDelimiter): blob.WaxDelimiter {
+    public static setDelimiter(delimiter: WaxDelimiter): WaxDelimiter {
         return Wax.core.delimiter = delimiter
     }
     
-    public static getConfigs(): blob.WaxConfig {
+    public static getConfigs(): WaxConfig {
         return Wax.core.configs
     }
     
-    public static getDelimiter(): blob.WaxDelimiter {
+    public static getDelimiter(): WaxDelimiter {
         return Wax.core.delimiter
     }
     
-    public static getTag(tagOpts: blob.WaxTagOpts): blob.WaxNode {
-        let tagDef = this.core.tags[tagOpts.tag] || null
+    public static getTag(tagOpts: WaxTagOpts): WaxNode {
+        const tagDef = this.core.tags[tagOpts.tag] || null
         if(typeof tagDef === "object" && tagDef !== null){
-            for (let def in tagOpts) {
+            for (const def in tagOpts) {
                 tagDef[def] = tagOpts[def]
             }
         }
@@ -66,13 +64,13 @@ export = class Wax implements blob.Waxer {
     }
     
     public static addPlugin(classLabel: WaxPluginConstructor){
-        let { directives = {} } = new classLabel(this)
-        for (let tag in directives) {
+        const { directives = {} } = new classLabel(this)
+        for (const tag in directives) {
             this.directive(tag, directives[tag])
         }
     }
 
-    public static template(name: string, source: string, config: blob.WaxConfig = this.getConfigs()): blob.WaxTemplate
+    public static template(name: string, source: string, config: WaxConfig = this.getConfigs()): WaxTemplate
     {
         if(typeof source === "string") {
             this.core.templates[name] = genTemplate(
@@ -84,7 +82,7 @@ export = class Wax implements blob.Waxer {
         return this.core.templates[name]
     }
     
-    public static resolve(selectors: string, context: blob.WaxConfig["context"] = {}, visible: boolean = true): void
+    public static resolve(selectors: string, context: WaxConfig["context"] = {}, visible: boolean = true): void
     {
         if(typeof document !== "undefined"){
             document.querySelectorAll(selectors).forEach((element: any) => {

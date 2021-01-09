@@ -30,7 +30,7 @@ Installing Waxe is pretty straight forward. Whether you're precompiling/renderin
 
 Installing via npm or yarn is advised for production (remember to always precompile templates) or if you wish to use Waxe CLI
 
-``` zsh
+``` sh
 $ npm i -D waxe # With NPM
 $ yarn add waxe # With Yarn
 ```
@@ -50,7 +50,7 @@ Frankly, the only method you need to get familiar with is `Wax.template` which t
 
 This method returns a callable function much similar to [doT's] which can be reused anywhere by simply passing the context to use as an argument.
 
-``` node
+``` js
 const pagefn = Wax.template("sample", `@yield('Hello World')`)
 
 console.log(

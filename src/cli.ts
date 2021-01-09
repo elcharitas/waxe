@@ -1,9 +1,15 @@
 import Wax from "./waxe"
 import { readFileSync } from "fs"
 
-let { 2: action, 3: path } = process.argv
+const { 2: action, 3: path } = process.argv
     ,{ version, description } = require("../package.json")
     ,{ log, error } = console
+    ,cmdHelp: { [command: string]: string } = {
+        render: `[path]\tRenders a template`,
+        compile: `[path]\tRenders a template`,
+        version: '\tDisplays version info',
+        help: '[topic]\tShows this help or help [topic]'
+    }
     ,parse = (src: string, pagefn: any = Wax.template("cliTest", src)) => {
         switch(action){
             case "render":
@@ -24,18 +30,12 @@ let { 2: action, 3: path } = process.argv
         }
     }
     ,help = (action?: string) => {
-        let cmdHelp: { [command: string]: string } = {
-            render: `[path]\tRenders a template`,
-            compile: `[path]\tRenders a template`,
-            version: '\tDisplays version info',
-            help: '[topic]\tShows this help or help [topic]'
-        }
-        ,commands: string = `\nStandard Commands:\n`
+        let commands: string = `\nStandard Commands:\n`
         
         log(`Usage: waxe ${action||"[command]"} [path]\n`)
         log(description)
         
-        for(let command in cmdHelp){
+        for(const command in cmdHelp){
             commands += `\t${command}\t${cmdHelp[command]}\n`
         }
         

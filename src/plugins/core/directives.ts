@@ -1,6 +1,3 @@
-
-import { WaxNode, WaxLiteral } from "../../blob"
-
 export class CoreDirectives {
     
     [directive: string]: WaxNode["descriptor"]
@@ -70,6 +67,10 @@ export class CoreDirectives {
         return `out+=this.escape(${literal.arg(0)||literal.arg(1)});`
     }
     
+    public extends(literal: WaxLiteral): string {
+        return ``
+    }
+    
     public include(literal: WaxLiteral): string {
         return `out+=Wax.template(${literal.arg(0)})(${literal.arg(1)},this);`
     }
@@ -103,7 +104,7 @@ export class CoreDirectives {
     }
     
     public endjs(): string {
-        return 'holdjs=out.split("").reverse().join("").replace(holdjs.split("").reverse().join(""), "").split("").reverse().join("");out=out.split("").reverse().join("").replace(holdjs.split("").reverse().join(""), "").split("").reverse().join("");try{eval(holdjs)} catch(e){};delete holdjs'
+        return 'holdjs=this.reverse(out).replace(this.reverse(holdjs), "");out=this.reverse(this.reverse(out).replace(holdjs, ""));(new Function(this.reverse(holdjs))).bind(this)();delete holdjs'
     }
 
     public comment(literal: WaxLiteral): string {

@@ -1,6 +1,4 @@
-import * as blob from "../blob"
-
-export function traverse(source: string, delimiter: blob.WaxDelimiter): blob.WaxTreeRoot {
+export function traverse(source: string, delimiter: WaxDelimiter): WaxTreeRoot {
     let { argList, blockSyntax, tagName, endPrefix } = delimiter
         ,text: string = JSON.stringify(source)
         ,directiveSyntax: string = `(${blockSyntax})`
@@ -15,15 +13,15 @@ export function traverse(source: string, delimiter: blob.WaxDelimiter): blob.Wax
     }
 }
 
-export function traverseNode(walker: blob.WaxWalker, tagOpts: blob.WaxTagOpts): string {
+export function traverseNode(walker: WaxWalker, tagOpts: WaxTagOpts): string {
     let { tag, argLiteral } = tagOpts
         ,result: string = ''
-        ,node: blob.WaxNode = null
+        ,node: WaxNode = null
     if (node = walker.parser.getTag(tagOpts)) {
         result = node.descriptor.call(node, argLiteral)
     }
     else if (walker.jsTags.indexOf(tag) > -1) {
-        result = tag + (argLiteral as blob.WaxLiteral).parse() + '{'
+        result = tag + (argLiteral as WaxLiteral).parse() + '{'
     }
     else if (walker.isBlockEnd(tag)) {
         result = '}'

@@ -1,4 +1,4 @@
-import { Wax, WaxTemplate } from "../blob"
+import { WaxTemplate } from "."
 
 interface Function {
     bind(this: Function, thisArg: any, ...argArray: any[]): WaxTemplate
@@ -16,7 +16,7 @@ export function bind(parser: Wax, source: string): WaxTemplate {
     try {
         holder = new Function('out', `this.merge(arguments);out+=${source};return out`)
         template = holder.bind(parser.getConfigs()?.context, '')
-    } catch(e){alert(e)}
+    } catch(e){}
     template.source = holder.toString()
     return template
 }

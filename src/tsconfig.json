@@ -9,6 +9,10 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "downlevelIteration": true,
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "baseUrl": "./",
+    "paths": {
+        "*": ["../waxe.d.ts"]
+    }
   }
 }

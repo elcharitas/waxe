@@ -2,6 +2,7 @@
 [![Version][1]][2]
 [![Documentation](https://img.shields.io/badge/documentation-yes-brightgreen.svg)][5]
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/elcharitas/waxe/graphs/commit-activity)
+[![Code Climate](https://api.codeclimate.com/v1/badges/bc5e7f8301a50b961cb8/maintainability)](https://codeclimate.com/github/elcharitas/waxe/maintainability)
 [![License: MIT](https://img.shields.io/github/license/elcharitas/waxe)][3]
 [![Twitter: elcharitas](https://img.shields.io/twitter/follow/elcharitas.svg?style=social)](https://twitter.com/elcharitas)
 
@@ -29,7 +30,7 @@ Installing Waxe is pretty straight forward. Whether you're precompiling/renderin
 
 Installing via npm or yarn is advised for production (remember to always precompile templates) or if you wish to use Waxe CLI
 
-``` zsh
+``` sh
 $ npm i -D waxe # With NPM
 $ yarn add waxe # With Yarn
 ```
@@ -49,7 +50,7 @@ Frankly, the only method you need to get familiar with is `Wax.template` which t
 
 This method returns a callable function much similar to [doT's] which can be reused anywhere by simply passing the context to use as an argument.
 
-``` node
+``` js
 const pagefn = Wax.template("sample", `@yield('Hello World')`)
 
 console.log(
