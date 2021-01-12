@@ -1,5 +1,4 @@
 {
-    "out": "_dist",
     "name": "WaxeJS",
     "exclude": "**/cli.ts",
     "categoryOrder": [
