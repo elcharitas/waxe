@@ -18,7 +18,7 @@ Waxe syntax is much similar to [Laravel's Template engine: Blade](https://larave
 
 ## Latest Release
 
-The latest stable release of Waxe is [Latest Release][1]. Release notes can be found on the [github repo][0].
+The latest stable release of Waxe is [![Latest Release][1]][2]. Release notes can be found on the [github repo][0].
 
 Changelogs for each release are also available in the `CHANGELOG.md` file.
 

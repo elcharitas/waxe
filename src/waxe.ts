@@ -3,26 +3,44 @@ import { mkConfig, WaxDelimiter, WaxConfig } from "./compiler"
 import { transpile, genTemplate } from "./compiler/parser"
 import { CoreWax } from "./plugins"
 
+/**
+ * Wax
+ *
+ * @
+ */
 export = class Wax implements Wax {
-    
+    /**
+     * Waxe Configuration options
+     *
+     * @var WaxConfig
+     */
     public configs: WaxConfig
     
+    /**
+     * The de
+     *
+     * @var WaxDelimiter
+     */
     public delimiter: WaxDelimiter
     
-    public templates: {
-        [name: string]: WaxTemplate
-    }
+    public templates: WaxCollection<WaxTemplate>
     
-    public tags: {
-        [tag: string]: WaxNode
-    }
+    public tags: WaxCollection<WaxNode>
 
-    public plugins: {
-        [label: string]: WaxPlugin
-    }
+    public plugins: WaxCollection<WaxPlugin>
 
+    /**
+     * The Wax Instance reference property
+     * 
+     * @ignore
+     */
     private static _core?: Wax
 
+    /**
+     * 
+     * 
+     * @ignore
+     */
     private constructor()
     {
         dbg("Wax", this)
@@ -37,7 +55,7 @@ export = class Wax implements Wax {
         return this.core.configs.context[name] = value;
     }
     
-    public static directive(tag: string, descriptor: WaxNode["descriptor"]): WaxNode {
+    public static directive(tag: string, descriptor: WaxDescriptor): WaxNode {
         return this.core.tags[tag] = {tag, descriptor}
     }
     
@@ -82,7 +100,7 @@ export = class Wax implements Wax {
         return this.core.templates[name]
     }
     
-    public static resolve(selectors: string, context: WaxConfig["context"] = {}, visible: boolean = true): void
+    public static resolve(selectors: string, context: WaxContext = {}, visible: boolean = true): void
     {
         if(typeof document !== "undefined"){
             document.querySelectorAll(selectors).forEach((element: any) => {
@@ -95,7 +113,7 @@ export = class Wax implements Wax {
     /**
      * Gets or Creates the Wax instance
      *
-     * @returns Wax
+     * @returns The created Wax Instance
      */
     public static get core(){
         if(!(this._core instanceof Wax)){

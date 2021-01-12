@@ -1,10 +1,10 @@
 {
     "out": "_dist",
-    "name": "Waxe.js",
-    "theme": "minimal",
+    "name": "WaxeJS",
     "exclude": "**/cli.ts",
     "categoryOrder": [
-        "Cat !"
+        "Waxe Core",
+        "Directives"
     ],
     "toc": [
         "Wax"

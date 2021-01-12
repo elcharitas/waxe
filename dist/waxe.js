@@ -409,6 +409,11 @@ var compiler_1 = require("./compiler");
 var parser_1 = require("./compiler/parser");
 var plugins_1 = require("./plugins");
 module.exports = /** @class */ (function () {
+    /**
+     *
+     *
+     * @ignore
+     */
     function Wax() {
         debug_1.dbg("Wax", this);
         this.configs = compiler_1.WaxConfig;
@@ -470,7 +475,7 @@ module.exports = /** @class */ (function () {
         /**
          * Gets or Creates the Wax instance
          *
-         * @returns Wax
+         * @returns The created Wax Instance
          */
         get: function () {
             if (!(this._core instanceof Wax)) {

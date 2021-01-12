@@ -7,14 +7,14 @@ const WaxConfig: WaxConfig = {
         now(): number {
             return Date.now()
         }
-        ,escape(text: string, strict: boolean = false){
+        ,escape(text: string, strict: boolean = false): string {
             text = encodeHTML(text)
             if(strict === true){
                 text = (escape || String)(text)
             }
             return text
         }
-        ,merge(this: WaxConfig["context"], args: WaxConfig["context"][] = []): void {
+        ,merge(this: WaxContext, args: WaxContext[] = []): void {
             args = [].slice.call(args);
             args.forEach(arg => {
                 for (let name in arg) {
@@ -22,7 +22,7 @@ const WaxConfig: WaxConfig = {
                 }
             })
         }
-        ,reverse(text: string, delimiter: string = ""){
+        ,reverse(text: string, delimiter: string = ""): string {
             return text.split(delimiter).reverse().join(delimiter)
         }
     }
@@ -40,7 +40,7 @@ const WaxDelimiter: WaxDelimiter = {
     endPrefix: 'end',
 }
 
-const WaxTemplate: WaxTemplate = (context: WaxConfig["context"] = {}) => null;
+const WaxTemplate: WaxTemplate = (context: WaxContext = {}) => null;
 
 function mkConfig(config: WaxConfig, delimiter: WaxDelimiter): WaxConfig {
     let cfg: WaxConfig = WaxConfig

@@ -1,0 +1,21 @@
+{{#if categories}}
+    {{#each categories}}
+        <section class="tsd-panel-group tsd-member-group {{cssClasses}}">
+            <h4>{{#if title}}{{title}} {{/if}}{{../title}}</h3>
+            {{#each children}}
+                {{#unless hasOwnDocument}}
+                    {{> member}}
+                {{/unless}}
+            {{/each}}
+        </section>
+    {{/each}}
+{{else}}
+    <section class="tsd-panel-group tsd-member-group {{cssClasses}}">
+        <h4>{{title}}</h2>
+        {{#each children}}
+            {{#unless hasOwnDocument}}
+                {{> member}}
+            {{/unless}}
+        {{/each}}
+    </section>
+{{/if}}

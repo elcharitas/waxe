@@ -1,0 +1,47 @@
+{{#if categories}}
+    <section class="tsd-panel-group tsd-index-group">
+        <section class="tsd-panel tsd-index-panel">
+            <div class="tsd-index-content">
+                {{#each categories}}
+                    <section class="tsd-index-section">
+                        <h4>{{title}}</h4>
+                        <ul class="tsd-index-list">
+                            {{#each children}}
+                                <li class="{{cssClasses}}"><a href="{{relativeURL url}}" class="tsd-kind-icon">{{#if name}}{{{wbr name}}}{{else}}<em>{{{wbr kindString}}}</em>{{/if}}</a></li>
+                            {{/each}}
+                        </ul>
+                    </section>
+                {{/each}}
+            </div>
+        </section>
+    </section>
+{{else}}
+    {{#if groups}}
+    <section class="tsd-panel-group tsd-index-group">
+        <section class="tsd-panel tsd-index-panel">
+            <div class="tsd-index-content">
+                {{#each groups}}
+                    <section class="tsd-index-section {{cssClasses}}">
+                        {{#if categories}}
+                            {{#each categories}}
+                                <ul class="tsd-index-list">
+                                    {{#each children}}
+                                        <li class="{{cssClasses}}"><a href="{{relativeURL url}}" class="tsd-kind-icon">{{#if name}}{{{wbr name}}}{{else}}<em>{{{wbr kindString}}}</em>{{/if}}</a></li>
+                                    {{/each}}
+                                </ul>
+                            {{/each}}
+                        {{else}}
+                            <h4>{{title}}</h3>
+                            <ul class="tsd-index-list">
+                                {{#each children}}
+                                    <li class="{{cssClasses}}"><a href="{{relativeURL url}}" class="tsd-kind-icon">{{#if name}}{{{wbr name}}}{{else}}<em>{{{wbr kindString}}}</em>{{/if}}</a></li>
+                                {{/each}}
+                            </ul>
+                        {{/if}}
+                    </section>
+                {{/each}}
+            </div>
+        </section>
+    </section>
+    {{/if}}
+{{/if}}

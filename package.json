@@ -1,6 +1,6 @@
 {
   "name": "waxe",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A zero dependency, Laravel blade styled template engine for JavaScript",
   "main": "lib/waxe.js",
   "types": "waxe.d.ts",
@@ -10,7 +10,7 @@
   "scripts": {
     "test": "mocha",
     "schip": "schip render samples/base.waxe > samples/base.htm",
-    "docs": "typedoc src --tsconfig src/tsconfig.json --options docs/options.json",
+    "docs": "typedoc waxe.d.ts --tsconfig src/tsconfig.json --options docs/options.json --theme docs/theme",
     "build:src": "rm -rf lib && tsc -b src",
     "build:dist": "browserify lib/waxe.js -s Wax > dist/waxe.js",
     "build:ugly": "uglifyjs -c 'expression=true,unsafe_proto=true,unsafe=true' -m -o dist/waxe.min.js dist/waxe.js",
@@ -45,9 +45,5 @@
     "schip": "^0.0.1",
     "mocha": "^8.2.1"
   },
-  "docpress": {
-    "docs": "docs",
-    "dist": "docs/_dist",
-    "github": "elcharitas/waxe"
-  }
+  "dependencies": {}
 }

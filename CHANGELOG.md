@@ -6,6 +6,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.3] (2021-01-08)
+### Added
+- Documentation theme to `docs/theme`
+- API introduction at `docs/index.md`
+- Patch up samples and add full support to *schip* script
+- `waxe.d.ts` to hold global types definition
+
+### Changed
+- Edited Changelog links to prevent further breaking
+- Change docs generator to typedoc v0.20
+- Refactor code for code climate issues
+
+### Removed
+- Rendered templates from vcs
+
 ## [0.0.2] (2021-01-08)
 ### Added
 - New Directives, [Access full list here][1]
@@ -35,7 +50,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Waxe setup with easy configure
 
 
-[Unreleased]: https://github.com/elcharitas/waxe/
-[0.0.1]: https://github.com/elcharitas/waxe/
+[Unreleased]: https://github.com/elcharitas/waxe/releases
+[0.0.1]: https://github.com/elcharitas/waxe/compare/0.0.1...HEAD
+[0.0.2]: https://github.com/elcharitas/waxe/compare/0.0.2...0.0.1
+[0.0.3]: https://github.com/elcharitas/waxe/compare/0.0.3...0.0.2
 
-[1]: https://waxe.now.sh/docs/
+[1]: https://waxe.now.sh
