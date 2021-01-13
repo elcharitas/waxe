@@ -6,11 +6,11 @@ env:
     - GIT_NAME: elcharitas
     - GIT_EMAIL: jonathanirhodia@gmail.com
     - GITHUB_REPO: elcharitas/waxe
-    - GIT_SOURCE: docs/_dist
+    - GIT_SOURCE: docs
  
 script:
 - npm i
-- npm run docs
+- npm t
  
 after_success:
 - if [ "$TRAVIS_BRANCH" = "master" -a "$TRAVIS_PULL_REQUEST" = "false" ]; then ./node_modules/.bin/git-update-ghpages -e; fi
