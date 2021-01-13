@@ -59,8 +59,10 @@ const WaxConfig: WaxConfig = {
         merge(this: WaxContext, args: WaxContext[] = []): void {
             args = [].slice.call(args);
             args.forEach(arg => {
-                for (let name in arg) {
-                    this[name] = arg[name];
+                for (const name in arg) {
+                    if(!(name in this) || Object.getOwnPropertyDescriptor(this, name).configurable === true){
+                        this[name] = arg[name];
+                    }
                 }
             });
         },

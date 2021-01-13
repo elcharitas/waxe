@@ -34,7 +34,7 @@ function transpile(parser: Wax, source: string, config: WaxConfig): Function {
 function traverse(source: string, delimiter: WaxDelimiter): WaxTreeRoot {
     const { argList, blockSyntax, tagName, endPrefix } = delimiter,
         text: string = JSON.stringify(source),
-        directives = text.match(new RegExp(`(${blockSyntax})`, 'g'));
+        directives: RegExpMatchArray = text.match(new RegExp(`(${blockSyntax})`, 'g'));
     return {
         text,
         directives,
@@ -48,7 +48,7 @@ function traverse(source: string, delimiter: WaxDelimiter): WaxTreeRoot {
 export function traverseNode(walker: WaxWalker, tagOpts: WaxTagOpts): string {
     const { tag, argLiteral } = tagOpts;
     let result: string = '',
-        node: WaxNode = null
+        node: WaxNode = null;
     if (node = walker.parser.getTag(tagOpts)) {
         result = node.descriptor.call(node, argLiteral);
     }
@@ -76,8 +76,7 @@ export function parseString(literal: WaxLiteral): string {
             const hold: string = list[index-3]+list[index-2]+list[index-1];
             if(hold.match(/^&(g|l)t$/)){
                 list[index-1] = list[index-2] = list[index-3] = '';
-                char = hold.replace('&gt', '>')
-                        .replace('&lt', '<');
+                char = hold.replace('&gt', '>').replace('&lt', '<');
             }
         }
         
@@ -85,11 +84,11 @@ export function parseString(literal: WaxLiteral): string {
     });
     
     return list.join('');
-};
+}
 
 export function parseTemplate(name: string = 'waxe-' + Date.now(), source: string = '', parser: Wax = null): WaxTemplate {
     return renameTemplate(name,
         transpile(parser, source, parser.getConfigs()),
         parser
     );
-};
+}

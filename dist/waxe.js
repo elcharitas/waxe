@@ -69,7 +69,9 @@ var WaxConfig = {
             args = [].slice.call(args);
             args.forEach(function (arg) {
                 for (var name_1 in arg) {
-                    _this[name_1] = arg[name_1];
+                    if (!(name_1 in _this) || Object.getOwnPropertyDescriptor(_this, name_1).configurable === true) {
+                        _this[name_1] = arg[name_1];
+                    }
                 }
             });
         },
@@ -81,7 +83,7 @@ var WaxConfig = {
 };
 exports.WaxConfig = WaxConfig;
 /** prevent mutation */
-conflictProp(WaxConfig.context);
+conflictProp(WaxConfig.context, ['now']);
 
 },{}],2:[function(require,module,exports){
 "use strict";
@@ -154,8 +156,7 @@ function parseString(literal) {
             var hold = list[index - 3] + list[index - 2] + list[index - 1];
             if (hold.match(/^&(g|l)t$/)) {
                 list[index - 1] = list[index - 2] = list[index - 3] = '';
-                char = hold.replace('&gt', '>')
-                    .replace('&lt', '<');
+                char = hold.replace('&gt', '>').replace('&lt', '<');
             }
         }
         list[index] = char;
@@ -163,7 +164,6 @@ function parseString(literal) {
     return list.join('');
 }
 exports.parseString = parseString;
-;
 function parseTemplate(name, source, parser) {
     if (name === void 0) { name = 'waxe-' + Date.now(); }
     if (source === void 0) { source = ''; }
@@ -171,7 +171,6 @@ function parseTemplate(name, source, parser) {
     return renameTemplate(name, transpile(parser, source, parser.getConfigs()), parser);
 }
 exports.parseTemplate = parseTemplate;
-;
 
 },{".":1,"./walker":3}],3:[function(require,module,exports){
 "use strict";
