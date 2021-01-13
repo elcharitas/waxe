@@ -4,9 +4,9 @@ interface Function {
     bind(this: Function, thisArg: any, ...argArray: any[]): WaxTemplate;
 }
 
-export function namefn(name:string, fn: WaxTemplate): WaxTemplate {
-    let finalFn: WaxTemplate = (new Function('return function (call) { return function ' + name + ' () { return call(this, arguments) }; };')())(Function.apply.bind(fn));
-    finalFn.source = fn.source.replace('anonymous', name);
+export function namefn(name:string, sourceFn: WaxTemplate): WaxTemplate {
+    let finalFn: WaxTemplate = new Function('call', 'return function ' + name + '(){return call(this, arguments)}')(Function.apply.bind(sourceFn));
+    finalFn.source = sourceFn.source.replace('anonymous', name);
     return finalFn;
 }
 

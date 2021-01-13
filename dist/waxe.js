@@ -4,7 +4,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.bind = exports.namefn = void 0;
 var _1 = require(".");
 function namefn(name, fn) {
-    var finalFn = (new Function('return function (call) { return function ' + name + ' () { return call(this, arguments) }; };')())(Function.apply.bind(fn));
+    var finalFn = new Function('call', 'return function ' + name + '(){return call(this, arguments)}')(Function.apply.bind(fn));
     finalFn.source = fn.source.replace('anonymous', name);
     return finalFn;
 }
