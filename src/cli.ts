@@ -1,8 +1,8 @@
-import Wax from "./waxe"
-import { readFileSync } from "fs"
+import Wax from './waxe';
+import { readFileSync } from 'fs';
 
 const { 2: action, 3: path } = process.argv
-    ,{ version, description } = require("../package.json")
+    ,{ version, description } = require('../package.json')
     ,{ log, error } = console
     ,cmdHelp: { [command: string]: string } = {
         render: `[path]\tRenders a template`,
@@ -10,36 +10,36 @@ const { 2: action, 3: path } = process.argv
         version: '\tDisplays version info',
         help: '[topic]\tShows this help or help [topic]'
     }
-    ,parse = (src: string, pagefn: any = Wax.template("cliTest", src)) => {
+    ,parse = (src: string, pagefn: any = Wax.template('cliTest', src)) => {
         switch(action){
-            case "render":
-                src ? log(pagefn({})): help(action)
+            case 'render':
+                src ? log(pagefn({})): help(action);
             break;
-            case "compile":
-                src ? log(pagefn.source): help(action)
+            case 'compile':
+                src ? log(pagefn.source): help(action);
             break;
-            case "help":
-                help(path)
+            case 'help':
+                help(path);
             break;
-            case "version":
-                log(version)
+            case 'version':
+                log(version);
             break;
             default:
-                help(action)
-                error("Unrecognized Command or Action!")
+                help(action);
+                error('Unrecognized Command or Action!');
         }
     }
     ,help = (action?: string) => {
-        let commands: string = `\nStandard Commands:\n`
+        let commands: string = `\nCommands:\n`;
         
-        log(`Usage: waxe ${action||"[command]"} [path]\n`)
-        log(description)
+        log(`Usage: waxe ${action||'[command]'} [path]\n`);
+        log(description);
         
         for(const command in cmdHelp){
-            commands += `\t${command}\t${cmdHelp[command]}\n`
+            commands += `\t${command}\t${cmdHelp[command]}\n`;
         }
         
-        log(commands)
-    }
+        log(commands);
+    };
 
-parse(path ? readFileSync(path).toString(): "")
+parse(path ? readFileSync(path).toString(): '');

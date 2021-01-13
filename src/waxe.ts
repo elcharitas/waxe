@@ -1,54 +1,32 @@
-import { dbg } from "./debug"
-import { mkConfig, WaxDelimiter, WaxConfig } from "./compiler"
-import { transpile, genTemplate } from "./compiler/parser"
-import { CoreWax } from "./plugins"
+import { dbg } from './debug';
+import { WaxConfig } from './compiler';
+import { transpile, genTemplate } from './compiler/parser';
+import { CoreWax } from './plugins';
 
-/**
- * Wax
- *
- * @
- */
+/**  */
 export = class Wax implements Wax {
     /**
      * Waxe Configuration options
      *
      * @var WaxConfig
      */
-    public configs: WaxConfig
+    public configs: WaxConfig;
     
-    /**
-     * The de
-     *
-     * @var WaxDelimiter
-     */
-    public delimiter: WaxDelimiter
+    public templates: WaxCollection<WaxTemplate>;
     
-    public templates: WaxCollection<WaxTemplate>
-    
-    public tags: WaxCollection<WaxNode>
+    public tags: WaxCollection<WaxNode>;
 
-    public plugins: WaxCollection<WaxPlugin>
+    public plugins: WaxCollection<WaxPlugin>;
 
-    /**
-     * The Wax Instance reference property
-     * 
-     * @ignore
-     */
-    private static _core?: Wax
+    private static _core?: Wax;
 
-    /**
-     * 
-     * 
-     * @ignore
-     */
     private constructor()
     {
-        dbg("Wax", this)
-        this.configs = WaxConfig
-        this.delimiter = WaxDelimiter
-        this.tags = {}
-        this.plugins = {}
-        this.templates = {}
+        dbg('Wax', this);
+        this.configs = WaxConfig;
+        this.tags = {};
+        this.plugins = {};
+        this.templates = {};
     }
     
     public static global(name: string, value: any = null): any {
@@ -56,58 +34,56 @@ export = class Wax implements Wax {
     }
     
     public static directive(tag: string, descriptor: WaxDescriptor): WaxNode {
-        return this.core.tags[tag] = {tag, descriptor}
+        return this.core.tags[tag] = {tag, descriptor};
     }
     
     public static setDelimiter(delimiter: WaxDelimiter): WaxDelimiter {
-        return Wax.core.delimiter = delimiter
+        return Wax.core.configs.delimiter = {...Wax.getDelimiter(), ...delimiter};
     }
     
     public static getConfigs(): WaxConfig {
-        return Wax.core.configs
+        return Wax.core.configs;
     }
     
     public static getDelimiter(): WaxDelimiter {
-        return Wax.core.delimiter
+        return Wax.getConfigs().delimiter;
     }
     
     public static getTag(tagOpts: WaxTagOpts): WaxNode {
-        const tagDef = this.core.tags[tagOpts.tag] || null
-        if(typeof tagDef === "object" && tagDef !== null){
-            for (const def in tagOpts) {
-                tagDef[def] = tagOpts[def]
-            }
+        let tagDef = this.core.tags[tagOpts.tag] || null;
+        if(typeof tagDef === 'object' && tagDef !== null){
+            tagDef = {...tagDef, ...tagOpts};
         }
-        return tagDef
+        return tagDef;
     }
     
     public static addPlugin(classLabel: WaxPluginConstruct){
-        const { directives = {} } = new classLabel(this)
+        const { directives = {} } = new classLabel(this);
         for (const tag in directives) {
-            this.directive(tag, directives[tag])
+            this.directive(tag, directives[tag]);
         }
     }
 
     public static template(name: string, source: string, config: WaxConfig = this.getConfigs()): WaxTemplate
     {
-        if(typeof source === "string") {
+        if(typeof source === 'string') {
             this.core.templates[name] = genTemplate(
-                transpile(Wax, source, mkConfig(config, Wax.getDelimiter())),
+                transpile(Wax, source, Wax.getConfigs()),
                 name
-            )
+            );
         }
         
-        return this.core.templates[name]
+        return this.core.templates[name];
     }
     
     public static resolve(selectors: string, context: WaxContext = {}, visible: boolean = true): void
     {
-        if(typeof document !== "undefined"){
+        if(typeof document !== 'undefined'){
             document.querySelectorAll(selectors).forEach((element: any) => {
-                element.innerHTML = element.value = Wax.template(element.id, element.value||element.innerHTML)(context)
-                if('hidden' in element) element.hidden = !visible
-            })
-        }
+                element.innerHTML = element.value = Wax.template(element.id, element.value||element.innerHTML)(context);
+                if('hidden' in element) element.hidden = !visible;
+            });
+        };
     }
 
     /**
@@ -117,9 +93,9 @@ export = class Wax implements Wax {
      */
     public static get core(){
         if(!(this._core instanceof Wax)){
-            this._core = new Wax
-            Wax.addPlugin(CoreWax)
+            this._core = new Wax;
+            Wax.addPlugin(CoreWax);
         }
-        return this._core
+        return this._core;
     }
 }

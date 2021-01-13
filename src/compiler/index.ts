@@ -1,59 +1,3 @@
-const WaxConfig: WaxConfig = {
-    strip: true,
-    throwUndefined: false,
-    autoescape: true,
-    context: {
-        startTime: Date.now(),
-        now(): number {
-            return Date.now()
-        }
-        ,escape(text: string, strict: boolean = false): string {
-            text = encodeHTML(text)
-            if(strict === true){
-                text = (escape || String)(text)
-            }
-            return text
-        }
-        ,merge(this: WaxContext, args: WaxContext[] = []): void {
-            args = [].slice.call(args);
-            args.forEach(arg => {
-                for (let name in arg) {
-                    this[name] = arg[name]
-                }
-            })
-        }
-        ,reverse(text: string, delimiter: string = ""): string {
-            return text.split(delimiter).reverse().join(delimiter)
-        }
-    }
-}
-
-Object.defineProperties(WaxConfig.context, {
-    merge: { writable: false, configurable: false },
-    escape: { writable: false, configurable: false }
-});
-
-const WaxDelimiter: WaxDelimiter = {
-    blockSyntax: "@(\\w+)(\\([^@]+\\))?",
-    tagName: 1,
-    argList: 2,
-    endPrefix: 'end',
-}
-
-const WaxTemplate: WaxTemplate = (context: WaxContext = {}) => null;
-
-function mkConfig(config: WaxConfig, delimiter: WaxDelimiter): WaxConfig {
-    let cfg: WaxConfig = WaxConfig
-    cfg.delimiter = WaxDelimiter
-    for(let bar in delimiter) {
-        cfg.delimiter[bar] = delimiter[bar]
-    }
-    for(let cf in config){
-        cfg[cf] = config[cf]
-    }
-    return cfg
-}
-
 /**
  * Encodes HTML to prevent malicious input
  *
@@ -68,17 +12,71 @@ function encodeHTML(html: string): string {
     '"': "&#34;",
     "'": "&#39;",
     "/": "&#47;",
-  }
+  };
 
-  const matchHTML: RegExp = /&(?!#?\w+;)|<|>|"|'|\//g
+  const matchHTML: RegExp = /&(?!#?\w+;)|<|>|"|'|\//g;
   
-  return typeof html === "string" ? html.replace(matchHTML, (m) => encodeRules[m] || m) : html
+  return typeof html === 'string' ? html.replace(matchHTML, (m) => encodeRules[m] || m) : html;
 }
+
+function conflictProp(context: any, props: string[] = Object.keys(context)): void {
+    const config: PropertyDescriptor = {
+        writable: false
+        ,configurable: false
+    };
+    props.forEach(name => {
+        Object.defineProperty(context, name, config);
+    });
+}
+
+const WaxTemplate: WaxTemplate = (context: WaxContext = {}) => null;
+
+const WaxDelimiter: WaxDelimiter = {
+    blockSyntax: '@(\\w+)(\\([^@]+\\))?'
+    ,tagName: 1
+    ,argList: 2
+    ,endPrefix: 'end'
+};
+
+/** The default configurations */
+const WaxConfig: WaxConfig = {
+    strip: true
+    ,throwUndefined: false
+    ,autoescape: true
+    ,delimiter: WaxDelimiter
+    ,context: {
+        startTime: Date.now()
+        ,now(): number {
+            return Date.now();
+        }
+        ,escape(text: string, strict: boolean = false): string {
+            text = encodeHTML(text);
+            if(strict === true){
+                text = (escape || String)(text);
+            }
+            return text;
+        }
+        ,merge(this: WaxContext, args: WaxContext[] = []): void {
+            args = [].slice.call(args);
+            args.forEach(arg => {
+                for (let name in arg) {
+                    this[name] = arg[name];
+                }
+            });
+        }
+        ,reverse(text: string, delimiter: string = ''): string {
+            return text.split(delimiter).reverse().join(delimiter);
+        }
+    }
+};
+
+/** prevent mutation */
+conflictProp(WaxConfig.context);
 
 export {
     WaxConfig,
     WaxTemplate,
     WaxDelimiter,
-    mkConfig,
-    encodeHTML
+    encodeHTML,
+    conflictProp
 }

@@ -1,4 +1,4 @@
-import { CoreDirectives } from "./directives"
+import { CoreDirectives } from './directives';
 
 export {
     CoreDirectives

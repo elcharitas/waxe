@@ -4,7 +4,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.bind = exports.namefn = void 0;
 var _1 = require(".");
 function namefn(name, fn) {
-    var finalFn = (new Function("return function (call) { return function " + name + " () { return call(this, arguments) }; };")())(Function.apply.bind(fn));
+    var finalFn = (new Function('return function (call) { return function ' + name + ' () { return call(this, arguments) }; };')())(Function.apply.bind(fn));
     finalFn.source = fn.source.replace('anonymous', name);
     return finalFn;
 }
@@ -25,11 +25,55 @@ exports.bind = bind;
 },{".":2}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.encodeHTML = exports.mkConfig = exports.WaxDelimiter = exports.WaxTemplate = exports.WaxConfig = void 0;
+exports.conflictProp = exports.encodeHTML = exports.WaxDelimiter = exports.WaxTemplate = exports.WaxConfig = void 0;
+/**
+ * Encodes HTML to prevent malicious input
+ *
+ * @param {string} html - The suspected html
+ * @returns string
+ */
+function encodeHTML(html) {
+    var encodeRules = {
+        "&": "&#38;",
+        "<": "&#60;",
+        ">": "&#62;",
+        '"': "&#34;",
+        "'": "&#39;",
+        "/": "&#47;",
+    };
+    var matchHTML = /&(?!#?\w+;)|<|>|"|'|\//g;
+    return typeof html === 'string' ? html.replace(matchHTML, function (m) { return encodeRules[m] || m; }) : html;
+}
+exports.encodeHTML = encodeHTML;
+function conflictProp(context, props) {
+    if (props === void 0) { props = Object.keys(context); }
+    var config = {
+        writable: false,
+        configurable: false
+    };
+    props.forEach(function (name) {
+        Object.defineProperty(context, name, config);
+    });
+}
+exports.conflictProp = conflictProp;
+var WaxTemplate = function (context) {
+    if (context === void 0) { context = {}; }
+    return null;
+};
+exports.WaxTemplate = WaxTemplate;
+var WaxDelimiter = {
+    blockSyntax: '@(\\w+)(\\([^@]+\\))?',
+    tagName: 1,
+    argList: 2,
+    endPrefix: 'end'
+};
+exports.WaxDelimiter = WaxDelimiter;
+/** The default configurations */
 var WaxConfig = {
     strip: true,
     throwUndefined: false,
     autoescape: true,
+    delimiter: WaxDelimiter,
     context: {
         startTime: Date.now(),
         now: function () {
@@ -54,59 +98,14 @@ var WaxConfig = {
             });
         },
         reverse: function (text, delimiter) {
-            if (delimiter === void 0) { delimiter = ""; }
+            if (delimiter === void 0) { delimiter = ''; }
             return text.split(delimiter).reverse().join(delimiter);
         }
     }
 };
 exports.WaxConfig = WaxConfig;
-Object.defineProperties(WaxConfig.context, {
-    merge: { writable: false, configurable: false },
-    escape: { writable: false, configurable: false }
-});
-var WaxDelimiter = {
-    blockSyntax: "@(\\w+)(\\([^@]+\\))?",
-    tagName: 1,
-    argList: 2,
-    endPrefix: 'end',
-};
-exports.WaxDelimiter = WaxDelimiter;
-var WaxTemplate = function (context) {
-    if (context === void 0) { context = {}; }
-    return null;
-};
-exports.WaxTemplate = WaxTemplate;
-function mkConfig(config, delimiter) {
-    var cfg = WaxConfig;
-    cfg.delimiter = WaxDelimiter;
-    for (var bar in delimiter) {
-        cfg.delimiter[bar] = delimiter[bar];
-    }
-    for (var cf in config) {
-        cfg[cf] = config[cf];
-    }
-    return cfg;
-}
-exports.mkConfig = mkConfig;
-/**
- * Encodes HTML to prevent malicious input
- *
- * @param {string} html - The suspected html
- * @returns string
- */
-function encodeHTML(html) {
-    var encodeRules = {
-        "&": "&#38;",
-        "<": "&#60;",
-        ">": "&#62;",
-        '"': "&#34;",
-        "'": "&#39;",
-        "/": "&#47;",
-    };
-    var matchHTML = /&(?!#?\w+;)|<|>|"|'|\//g;
-    return typeof html === "string" ? html.replace(matchHTML, function (m) { return encodeRules[m] || m; }) : html;
-}
-exports.encodeHTML = encodeHTML;
+/** prevent mutation */
+conflictProp(WaxConfig.context);
 
 },{}],3:[function(require,module,exports){
 "use strict";
@@ -128,11 +127,12 @@ function transpile(parser, source, config) {
     return binder_1.bind(parser, text);
 }
 exports.transpile = transpile;
-exports.genTemplate = function (template, name) {
+function genTemplate(template, name) {
     if (template === void 0) { template = _1.WaxTemplate; }
     if (name === void 0) { name = 'waxe-' + Date.now(); }
     return binder_1.namefn(name, template);
-};
+}
+exports.genTemplate = genTemplate;
 
 },{".":2,"./binder":1,"./traverse":4,"./walker":5}],4:[function(require,module,exports){
 "use strict";
@@ -151,7 +151,8 @@ function traverse(source, delimiter) {
 }
 exports.traverse = traverse;
 function traverseNode(walker, tagOpts) {
-    var tag = tagOpts.tag, argLiteral = tagOpts.argLiteral, result = '', node = null;
+    var tag = tagOpts.tag, argLiteral = tagOpts.argLiteral;
+    var result = '', node = null;
     if (node = walker.parser.getTag(tagOpts)) {
         result = node.descriptor.call(node, argLiteral);
     }
@@ -173,7 +174,7 @@ var traverse_1 = require("./traverse");
 var Walker = /** @class */ (function () {
     function Walker(parser, root) {
         if (root === void 0) { root = {}; }
-        debug_1.dbg("Walker", this);
+        debug_1.dbg('Walker', this);
         this.directives = root.directives;
         this.argList = root.argList;
         this.blockSyntax = root.blockSyntax;
@@ -194,7 +195,7 @@ var Walker = /** @class */ (function () {
         return text;
     };
     Walker.prototype.isBlockEnd = function (realTag, tag) {
-        if (realTag === void 0) { realTag = ""; }
+        if (realTag === void 0) { realTag = ''; }
         if (tag === void 0) { tag = realTag.replace(this.endPrefix, ''); }
         return realTag.indexOf(this.endPrefix) === 0 && (this.jsTags.indexOf(tag) > -1 || this.parser.getTag({ tag: tag }) !== null);
     };
@@ -241,7 +242,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.dbg = exports.formatDbg = exports.dbgType = exports.debugProp = exports.debugkit = void 0;
 var MessageList = __importStar(require("./messages.json"));
 var Message = MessageList;
-exports.debugkit = typeof global !== "undefined" ? global : window;
+exports.debugkit = typeof global !== 'undefined' ? global : window;
 function debugProp(object, property) {
     return Object.prototype.hasOwnProperty.call(object, property);
 }
@@ -250,11 +251,11 @@ function dbgType(args, constraint, expected) {
     if (typeof constraint !== typeof expected) {
         args.push(typeof expected);
     }
-    if (typeof constraint === "undefined" && typeof expected === "object") {
-        args.push("initialized");
+    if (typeof constraint === 'undefined' && typeof expected === 'object') {
+        args.push('initialized');
     }
-    else if (typeof expected !== "object") {
-        args.push("declared");
+    else if (typeof expected !== 'object') {
+        args.push('declared');
     }
     return args;
 }
@@ -271,9 +272,9 @@ function formatDbg(name, args) {
 exports.formatDbg = formatDbg;
 function dbg(check, constraint, expected, dbgFor) {
     if (expected === void 0) { expected = {}; }
-    if (dbgFor === void 0) { dbgFor = "Type"; }
+    if (dbgFor === void 0) { dbgFor = 'Type'; }
     var args = [], debugArg = check === null || check === void 0 ? void 0 : check.toString(), debugStack = null;
-    dbgFor += "Error";
+    dbgFor += 'Error';
     if (debugProp(exports.debugkit, dbgFor)) {
         args = dbgType([check], constraint, expected);
         debugStack = exports.debugkit[dbgFor];
@@ -404,20 +405,25 @@ exports.CoreWax = CoreWax;
 
 },{"./core":9}],11:[function(require,module,exports){
 "use strict";
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var debug_1 = require("./debug");
 var compiler_1 = require("./compiler");
 var parser_1 = require("./compiler/parser");
 var plugins_1 = require("./plugins");
 module.exports = /** @class */ (function () {
-    /**
-     *
-     *
-     * @ignore
-     */
     function Wax() {
-        debug_1.dbg("Wax", this);
+        debug_1.dbg('Wax', this);
         this.configs = compiler_1.WaxConfig;
-        this.delimiter = compiler_1.WaxDelimiter;
         this.tags = {};
         this.plugins = {};
         this.templates = {};
@@ -430,20 +436,18 @@ module.exports = /** @class */ (function () {
         return this.core.tags[tag] = { tag: tag, descriptor: descriptor };
     };
     Wax.setDelimiter = function (delimiter) {
-        return Wax.core.delimiter = delimiter;
+        return Wax.core.configs.delimiter = __assign(__assign({}, Wax.getDelimiter()), delimiter);
     };
     Wax.getConfigs = function () {
         return Wax.core.configs;
     };
     Wax.getDelimiter = function () {
-        return Wax.core.delimiter;
+        return Wax.getConfigs().delimiter;
     };
     Wax.getTag = function (tagOpts) {
         var tagDef = this.core.tags[tagOpts.tag] || null;
-        if (typeof tagDef === "object" && tagDef !== null) {
-            for (var def in tagOpts) {
-                tagDef[def] = tagOpts[def];
-            }
+        if (typeof tagDef === 'object' && tagDef !== null) {
+            tagDef = __assign(__assign({}, tagDef), tagOpts);
         }
         return tagDef;
     };
@@ -455,21 +459,22 @@ module.exports = /** @class */ (function () {
     };
     Wax.template = function (name, source, config) {
         if (config === void 0) { config = this.getConfigs(); }
-        if (typeof source === "string") {
-            this.core.templates[name] = parser_1.genTemplate(parser_1.transpile(Wax, source, compiler_1.mkConfig(config, Wax.getDelimiter())), name);
+        if (typeof source === 'string') {
+            this.core.templates[name] = parser_1.genTemplate(parser_1.transpile(Wax, source, Wax.getConfigs()), name);
         }
         return this.core.templates[name];
     };
     Wax.resolve = function (selectors, context, visible) {
         if (context === void 0) { context = {}; }
         if (visible === void 0) { visible = true; }
-        if (typeof document !== "undefined") {
+        if (typeof document !== 'undefined') {
             document.querySelectorAll(selectors).forEach(function (element) {
                 element.innerHTML = element.value = Wax.template(element.id, element.value || element.innerHTML)(context);
                 if ('hidden' in element)
                     element.hidden = !visible;
             });
         }
+        ;
     };
     Object.defineProperty(Wax, "core", {
         /**

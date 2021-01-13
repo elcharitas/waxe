@@ -1,8 +1,8 @@
 export function traverse(source: string, delimiter: WaxDelimiter): WaxTreeRoot {
-    let { argList, blockSyntax, tagName, endPrefix } = delimiter
+    const { argList, blockSyntax, tagName, endPrefix } = delimiter
         ,text: string = JSON.stringify(source)
         ,directiveSyntax: string = `(${blockSyntax})`
-        ,directives = text.match(new RegExp(directiveSyntax, 'g'))
+        ,directives = text.match(new RegExp(directiveSyntax, 'g'));
     return {
         text,
         directives,
@@ -10,21 +10,21 @@ export function traverse(source: string, delimiter: WaxDelimiter): WaxTreeRoot {
         blockSyntax,
         tagName,
         endPrefix
-    }
+    };
 }
 
 export function traverseNode(walker: WaxWalker, tagOpts: WaxTagOpts): string {
-    let { tag, argLiteral } = tagOpts
-        ,result: string = ''
+    const { tag, argLiteral } = tagOpts
+    let result: string = ''
         ,node: WaxNode = null
     if (node = walker.parser.getTag(tagOpts)) {
-        result = node.descriptor.call(node, argLiteral)
+        result = node.descriptor.call(node, argLiteral);
     }
     else if (walker.jsTags.indexOf(tag) > -1) {
-        result = tag + (argLiteral as WaxLiteral).parse() + '{'
+        result = tag + (argLiteral as WaxLiteral).parse() + '{';
     }
     else if (walker.isBlockEnd(tag)) {
-        result = '}'
+        result = '}';
     }
-    return result
+    return result;
 }

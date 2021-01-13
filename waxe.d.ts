@@ -99,7 +99,7 @@ declare interface WaxDelimiter extends WaxCollection<any> {
      *
      * @default 2
      */
-    argrecord?: number;
+    argList?: number;
     /**
      * A string to determine end of a block by it tagName
      * Set as null to disable this
@@ -112,7 +112,9 @@ declare interface WaxDelimiter extends WaxCollection<any> {
 /**
  * **Interface WaxTemplate**
  *
- * This is a function called to render a resolved template
+ * This is a function called to render a resolved template.
+ * 
+ * It takes in an optional {@link WaxContext | context} object as argument.
  */
 declare interface WaxTemplate extends Function {
     /**
@@ -123,9 +125,19 @@ declare interface WaxTemplate extends Function {
      */
     (...scopes: WaxContext[]): string;
     /**
-     * @returns - The source value of the template
+     * The name of the template
+     */
+    readonly name: string;
+    /**
+     * The source value of the template
      */
     source?: string;
+    /** @internal */
+    length: number;
+    /** @internal */
+    caller: Function;
+    /** @internal */
+    prototype: any;
 }
 
 /**
@@ -277,7 +289,7 @@ declare interface WaxWalker extends WaxTreeRoot, WaxTagOpts {
      *
      * @returns - The literal string
      */
-    toArgs(argrecord: string): WaxLiteral;
+    toArgs(argList: string): WaxLiteral;
     /**
      * Checks if the `tagName` can end the block
      *
@@ -286,6 +298,7 @@ declare interface WaxWalker extends WaxTreeRoot, WaxTagOpts {
     isBlockEnd(tagName: string): boolean;
 }
 
+/** @internal */
 declare interface WaxConstruct {
     configs?: WaxConfig;
     delimiter?: WaxDelimiter;
@@ -317,7 +330,6 @@ declare interface Wax {
      * ```waxe
      * @yield($monkey)
      * ```
-     *
      * @param name - The Name of new variable
      * @param value - Value to be assigned
      * @returns - The assigned value
@@ -336,7 +348,6 @@ declare interface Wax {
      * ```waxe
      * @monkey
      * ```
-     *
      * @param tagName - The name of the directive
      * @param descriptor - The directive's descriptor
      * @returns - The created node for type checks
@@ -351,10 +362,9 @@ declare interface Wax {
      * var tpl = Wax.template('hello.waxe', '@yield("Hello")');
      * tpl === Wax.template('hello.waxe') // true
      * ```
-     * 
      * @param name - The name of the template
      * @param source - The source text for the template
-     * @returns - The resolved {@link WaxTemplate|template function}
+     * @returns - The resolved {@link WaxTemplate | template function}
      */
     template(name: string, source?: string): WaxTemplate;
     /**
@@ -362,7 +372,7 @@ declare interface Wax {
      */
     getConfigs(): WaxConfig;
     /**
-     * Gets the {@link WaxDelimiter|delimiter}
+     * Gets the current {@link WaxDelimiter | delimiter}
      */
     getDelimiter(): WaxDelimiter;
     /**
@@ -389,13 +399,39 @@ declare interface WaxCollection<WaxType> {
 }
 
 /**
- * waxe module
+ * The waxe module
  * 
- * This is the module exports Wax class, which must be default imported.
+ * This module exports a class which implements Wax Interface which must be default imported for use.
  * 
- * This export is assignment based and as such the `--esModuleInterop` flag must be enabled before Waxe can be default imported and use
+ * This export is assignment based and as such the `--esModuleInterop` flag must be enabled before Waxe can be default imported and use.
+ * 
+ * **Example**
+ * ```ts
+ * // tpl.ts
+ * import Wax from "waxe";
+ * ```
+ * Now you can compile with the flag on
+ * ```sh
+ * $ tsc --esModuleInterop tpl.ts
+ * ```
+ * If you intend to use Waxe via browser or commonjs, no further configuration would be required
+ * 
+ * **Example**
+ * ```js
+ * const Wax = require('waxe');
+ * ```
+ * or via browser
+ * ```html
+ * <script src="/path/to/waxe.min.js"></script>
+ * <script type="text/javascript">
+ *      console.log(typeof Wax === "undefined") // false
+ * </script>
+ * ```
  */
 declare module "waxe" {
+    /**
+     * @internal
+     */
     const Wax: Wax;
     export = Wax;
 }

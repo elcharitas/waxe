@@ -1,5 +1,5 @@
-import { dbg } from "../debug"
-import { traverseNode } from "./traverse"
+import { dbg } from '../debug';
+import { traverseNode } from './traverse';
 
 export default class Walker implements WaxWalker {
     
@@ -20,7 +20,7 @@ export default class Walker implements WaxWalker {
     public parser: Wax
     
     public constructor(parser: Wax, root: WaxTreeRoot = {}){
-        dbg("Walker", this)
+        dbg('Walker', this)
         this.directives = root.directives
         this.argList = root.argList
         this.blockSyntax = root.blockSyntax
@@ -31,37 +31,43 @@ export default class Walker implements WaxWalker {
         this.parser = parser
     }
     
-    public walk(text: string = this.text)
+    public walk(text: string = this.text): string
     {
         this.directives?.forEach((rawBlock: string, position: number) => {
-            let block = JSON.parse(`"${rawBlock}"`)
-                ,{ [this.tagName]: tag, [this.argList]: argList = '' } = block.match(this.blockSyntax)
-                ,{ configs = {}, configs: { context = {} } } = this.parser.core
-                ,argLiteral: WaxLiteral = this.toArgs(argList)
-            text = text.replace(rawBlock, `";${traverseNode(this, { tag, argLiteral, block, position, configs, context })}\nout+="`)
-        })
-        return text
+            const block = JSON.parse(`"${rawBlock}"`)
+                ,{
+                    [this.tagName]: tag
+                    ,[this.argList]: argList = ''
+                } = block.match(this.blockSyntax)
+                ,{
+                    configs = {}
+                    ,configs: { context = {} }
+                } = this.parser.core
+                ,argLiteral: WaxLiteral = this.toArgs(argList);
+            text = text.replace(rawBlock, `";${traverseNode(this, { tag, argLiteral, block, position, configs, context })}\nout+="`);
+        });
+        return text;
     }
     
-    public isBlockEnd(realTag: string="", tag: string = realTag.replace(this.endPrefix,'')): boolean {
-        return realTag.indexOf(this.endPrefix) === 0 && (this.jsTags.indexOf(tag) > -1 || this.parser.getTag({tag}) !== null)
+    public isBlockEnd(realTag: string='', tag: string = realTag.replace(this.endPrefix,'')): boolean {
+        return realTag.indexOf(this.endPrefix) === 0 && (this.jsTags.indexOf(tag) > -1 || this.parser.getTag({tag}) !== null);
     }
     
     public toArgs(list: string): WaxLiteral {
-        const argLiteral: WaxLiteral = new String(list)
+        const argLiteral: WaxLiteral = new String(list);
         
         argLiteral.arg = function(key: number): string {
-            return `[${argLiteral.text()}][${key}]`
+            return `[${argLiteral.text()}][${key}]`;
         }
         
         argLiteral.parse = function(): string {
-            return argLiteral.replace(/\$/g, 'this.')
+            return argLiteral.replace(/\$/g, 'this.');
         }
         
         argLiteral.text = function(): string {
-            return argLiteral.parse().replace(/^\(([\s\S]*)\)$/, '$1')
+            return argLiteral.parse().replace(/^\(([\s\S]*)\)$/, '$1');
         }
         
-        return argLiteral
+        return argLiteral;
     }
 }
