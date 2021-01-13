@@ -1,5 +1,5 @@
 import { dbg } from '../debug';
-import { traverseNode } from './traverse';
+import { traverseNode, parseString } from './parser';
 
 export default class Walker implements WaxWalker {
     
@@ -20,7 +20,7 @@ export default class Walker implements WaxWalker {
     public parser: Wax;
     
     public constructor(parser: Wax, root: WaxTreeRoot = {}){
-        dbg('Walker', this)
+        dbg('Walker', this);
         this.directives = root.directives;
         this.argList = root.argList;
         this.blockSyntax = root.blockSyntax;
@@ -39,14 +39,9 @@ export default class Walker implements WaxWalker {
                     [this.tagName]: tag,
                     [this.argList]: argList = ''
                 } = block.match(this.blockSyntax),
-                {
-                    configs = {},
-                    configs: {
-                        context = {}
-                    }
-                } = this.parser.core,
+                configs = this.parser.getConfigs(),
                 argLiteral: WaxLiteral = this.toArgs(argList);
-            text = text.replace(rawBlock, `";${traverseNode(this, { tag, argLiteral, block, position, configs, context })}\nout+="`);
+            text = text.replace(rawBlock, `";${traverseNode(this, { tag, argLiteral, block, position, configs, context: configs.context })}\nout+="`);
         });
         return text;
     }
@@ -63,7 +58,7 @@ export default class Walker implements WaxWalker {
         }
         
         argLiteral.parse = function(): string {
-            return argLiteral.replace(/\$/g, 'this.');
+            return parseString(argLiteral);
         }
         
         argLiteral.text = function(): string {

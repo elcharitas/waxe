@@ -6,7 +6,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title id="title"> Samples - @yield($title) </title>
     </head>
-    <body id="wax" hidden>
+    <body id="wax">
         <h2>@yield($title)</h2>
         <p>
             @yield("Generated in "+ ($now() - $startTime) + "ms")

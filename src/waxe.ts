@@ -1,6 +1,6 @@
 import { dbg } from './debug';
 import { WaxConfig } from './compiler';
-import { transpile, genTemplate } from './compiler/parser';
+import { parseTemplate } from './compiler/parser';
 import { CoreWax } from './plugins';
 
 /**  */
@@ -67,10 +67,7 @@ export = class Wax implements Wax {
     public static template(name: string, source: string, config: WaxConfig = this.getConfigs()): WaxTemplate
     {
         if(typeof source === 'string') {
-            this.core.templates[name] = genTemplate(
-                transpile(Wax, source, Wax.getConfigs()),
-                name
-            );
+            this.core.templates[name] = parseTemplate(name, source, Wax);
         }
         
         return this.core.templates[name];

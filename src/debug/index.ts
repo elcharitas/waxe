@@ -1,4 +1,4 @@
-import * as MessageList from './messages.json';
+import * as MessageList from './list.json';
 
 const Message: {
     [type: string]: any
@@ -31,16 +31,16 @@ export function formatDbg(name: string, args: string[]): string {
     if(debugProp(Message, name)){
         let { [name]: { [args.length - 2]: msg = '' } } = Message;
         args.forEach((arg: string, index: number) => {
-            msg = msg.replace(`%${index+1}`, arg?.toString())
+            msg = msg.replace(`%${index+1}`, arg?.toString());
         });
         return msg;
     }
 }
 
 export function dbg(check: any, constraint: any, expected: any = {}, dbgFor: string = 'Type'): void {
-    let args: string[] = []
-        ,debugArg: string = check?.toString()
-        ,debugStack: typeof Error = null;
+    let args: string[] = [],
+        debugArg: string = check?.toString(),
+        debugStack: typeof Error = null;
     
     dbgFor += 'Error';
     

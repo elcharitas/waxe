@@ -1,4 +1,5 @@
 import { CoreDirectives } from './core';
+import { MiscDirectives } from './misc';
 
 export class CoreWax implements WaxPlugin {
 
@@ -6,7 +7,6 @@ export class CoreWax implements WaxPlugin {
 
     public constructor(Wax: Wax) {
 
-        this.directives = new CoreDirectives;
-
+        this.directives = new (CoreDirectives.bind(new MiscDirectives));
     }
 }

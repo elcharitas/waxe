@@ -1,29 +1,6 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Wax = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.bind = exports.namefn = void 0;
-function namefn(name, sourceFn) {
-    var finalFn = new Function('call', 'return function ' + name + '(){return call(this,arguments)}')(Function.apply.bind(sourceFn));
-    finalFn.source = sourceFn.source.replace('anonymous', name);
-    return finalFn;
-}
-exports.namefn = namefn;
-function bind(parser, source) {
-    var _a;
-    var template = null;
-    try {
-        template = new Function('out', "this.merge(arguments);out+=" + source + ";return out").bind((_a = parser.getConfigs()) === null || _a === void 0 ? void 0 : _a.context, '');
-        template.source = template.toString();
-    }
-    catch (e) {
-    }
-    return template;
-}
-exports.bind = bind;
-
-},{}],2:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 exports.conflictProp = exports.encodeHTML = exports.WaxDelimiter = exports.WaxTemplate = exports.WaxConfig = void 0;
 /**
  * Encodes HTML to prevent malicious input
@@ -106,39 +83,36 @@ exports.WaxConfig = WaxConfig;
 /** prevent mutation */
 conflictProp(WaxConfig.context);
 
-},{}],3:[function(require,module,exports){
+},{}],2:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.genTemplate = exports.transpile = void 0;
+exports.parseTemplate = exports.parseString = exports.traverseNode = void 0;
 var _1 = require(".");
-var binder_1 = require("./binder");
-var traverse_1 = require("./traverse");
 var walker_1 = __importDefault(require("./walker"));
+function renameTemplate(name, sourceFn, parser) {
+    return new Function('call', 'return function ' + name + '(){return call(this,arguments)}')(Function.apply.bind(sourceFn.bind(parser.getConfigs().context, '')));
+}
+function bind(source) {
+    var template = _1.WaxTemplate;
+    try {
+        template = new Function('out', "this.merge(arguments);out+=" + source + ";return out");
+    }
+    catch (e) { }
+    return template;
+}
 function transpile(parser, source, config) {
-    var treeRoot = traverse_1.traverse(source, config.delimiter);
+    var treeRoot = traverse(source, config.delimiter);
     var text = new walker_1.default(parser, treeRoot).walk();
     if (config.strip === true) {
         text = text.replace(/\\n\s+/g, '');
     }
-    return binder_1.bind(parser, text);
+    return bind(text);
 }
-exports.transpile = transpile;
-function genTemplate(template, name) {
-    if (template === void 0) { template = _1.WaxTemplate; }
-    if (name === void 0) { name = 'waxe-' + Date.now(); }
-    return binder_1.namefn(name, template);
-}
-exports.genTemplate = genTemplate;
-
-},{".":2,"./binder":1,"./traverse":4,"./walker":5}],4:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.traverseNode = exports.traverse = void 0;
 function traverse(source, delimiter) {
-    var argList = delimiter.argList, blockSyntax = delimiter.blockSyntax, tagName = delimiter.tagName, endPrefix = delimiter.endPrefix, text = JSON.stringify(source), directiveSyntax = "(" + blockSyntax + ")", directives = text.match(new RegExp(directiveSyntax, 'g'));
+    var argList = delimiter.argList, blockSyntax = delimiter.blockSyntax, tagName = delimiter.tagName, endPrefix = delimiter.endPrefix, text = JSON.stringify(source), directives = text.match(new RegExp("(" + blockSyntax + ")", 'g'));
     return {
         text: text,
         directives: directives,
@@ -148,7 +122,6 @@ function traverse(source, delimiter) {
         endPrefix: endPrefix
     };
 }
-exports.traverse = traverse;
 function traverseNode(walker, tagOpts) {
     var tag = tagOpts.tag, argLiteral = tagOpts.argLiteral;
     var result = '', node = null;
@@ -164,12 +137,47 @@ function traverseNode(walker, tagOpts) {
     return result;
 }
 exports.traverseNode = traverseNode;
+function parseString(literal) {
+    var list = literal.split('');
+    var inString = null;
+    list.forEach(function (char, index) {
+        if (char != inString && (inString == '"' || inString == '\'')) {
+            inString = char;
+        }
+        else if (inString == char) {
+            inString = null;
+        }
+        else if (!inString && char == '$') {
+            char = 'this.';
+        }
+        else if (!inString && char == ';') {
+            var hold = list[index - 3] + list[index - 2] + list[index - 1];
+            if (hold.match(/^&(g|l)t$/)) {
+                list[index - 1] = list[index - 2] = list[index - 3] = '';
+                char = hold.replace('&gt', '>')
+                    .replace('&lt', '<');
+            }
+        }
+        list[index] = char;
+    });
+    return list.join('');
+}
+exports.parseString = parseString;
+;
+function parseTemplate(name, source, parser) {
+    if (name === void 0) { name = 'waxe-' + Date.now(); }
+    if (source === void 0) { source = ''; }
+    if (parser === void 0) { parser = null; }
+    return renameTemplate(name, transpile(parser, source, parser.getConfigs()), parser);
+}
+exports.parseTemplate = parseTemplate;
+;
 
-},{}],5:[function(require,module,exports){
+},{".":1,"./walker":3}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var debug_1 = require("../debug");
-var traverse_1 = require("./traverse");
+var parser_1 = require("./parser");
 var Walker = /** @class */ (function () {
     function Walker(parser, root) {
         if (root === void 0) { root = {}; }
@@ -188,8 +196,8 @@ var Walker = /** @class */ (function () {
         var _a;
         if (text === void 0) { text = this.text; }
         (_a = this.directives) === null || _a === void 0 ? void 0 : _a.forEach(function (rawBlock, position) {
-            var block = JSON.parse("\"" + rawBlock + "\""), _a = block.match(_this.blockSyntax), _b = _this.tagName, tag = _a[_b], _c = _this.argList, _d = _a[_c], argList = _d === void 0 ? '' : _d, _e = _this.parser.core, _f = _e.configs, configs = _f === void 0 ? {} : _f, _g = _e.configs.context, context = _g === void 0 ? {} : _g, argLiteral = _this.toArgs(argList);
-            text = text.replace(rawBlock, "\";" + traverse_1.traverseNode(_this, { tag: tag, argLiteral: argLiteral, block: block, position: position, configs: configs, context: context }) + "\nout+=\"");
+            var block = JSON.parse("\"" + rawBlock + "\""), _a = block.match(_this.blockSyntax), _b = _this.tagName, tag = _a[_b], _c = _this.argList, _d = _a[_c], argList = _d === void 0 ? '' : _d, configs = _this.parser.getConfigs(), argLiteral = _this.toArgs(argList);
+            text = text.replace(rawBlock, "\";" + parser_1.traverseNode(_this, { tag: tag, argLiteral: argLiteral, block: block, position: position, configs: configs, context: configs.context }) + "\nout+=\"");
         });
         return text;
     };
@@ -204,7 +212,7 @@ var Walker = /** @class */ (function () {
             return "[" + argLiteral.text() + "][" + key + "]";
         };
         argLiteral.parse = function () {
-            return argLiteral.replace(/\$/g, 'this.');
+            return parser_1.parseString(argLiteral);
         };
         argLiteral.text = function () {
             return argLiteral.parse().replace(/^\(([\s\S]*)\)$/, '$1');
@@ -215,7 +223,7 @@ var Walker = /** @class */ (function () {
 }());
 exports.default = Walker;
 
-},{"../debug":6,"./traverse":4}],6:[function(require,module,exports){
+},{"../debug":4,"./parser":2}],4:[function(require,module,exports){
 (function (global){(function (){
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
@@ -239,7 +247,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.dbg = exports.formatDbg = exports.dbgType = exports.debugProp = exports.debugkit = void 0;
-var MessageList = __importStar(require("./messages.json"));
+var MessageList = __importStar(require("./list.json"));
 var Message = MessageList;
 exports.debugkit = typeof global !== 'undefined' ? global : window;
 function debugProp(object, property) {
@@ -286,7 +294,7 @@ function dbg(check, constraint, expected, dbgFor) {
 exports.dbg = dbg;
 
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./messages.json":7}],7:[function(require,module,exports){
+},{"./list.json":5}],5:[function(require,module,exports){
 module.exports={
     "TypeError": [
         "%1 should be of %2's type",
@@ -294,13 +302,31 @@ module.exports={
     ]
 }
 
-},{}],8:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CoreDirectives = void 0;
 var CoreDirectives = /** @class */ (function () {
     function CoreDirectives() {
     }
+    CoreDirectives.prototype.set = function (literal) {
+        return "eval(" + literal.arg(0) + "+\"=\"+" + JSON.stringify(literal.arg(1)) + ");";
+    };
+    CoreDirectives.prototype.define = function (literal) {
+        return "this[" + literal.arg(0) + "] = " + literal.arg(1) + ";";
+    };
+    CoreDirectives.prototype.macro = function (literal) {
+        return "this[" + literal.arg(0) + "] = function(){var name = " + literal.arg(0) + "; var call = this[name]; var args=[].slice.call(arguments);var out = \"\";";
+    };
+    CoreDirectives.prototype.endmacro = function () {
+        return "return out;}";
+    };
+    CoreDirectives.prototype.include = function (literal) {
+        return "out+=Wax.template(" + literal.arg(0) + ")(" + literal.arg(1) + ",this);";
+    };
+    CoreDirectives.prototype.yield = function (literal) {
+        return "out+=(" + this.configs.autoescape + " ? this.escape: String)(" + (literal.arg(0) || literal.arg(1)) + ");";
+    };
     CoreDirectives.prototype.elseif = function (literal) {
         return "} else if(" + literal + ") {";
     };
@@ -332,77 +358,61 @@ var CoreDirectives = /** @class */ (function () {
     CoreDirectives.prototype.endforelse = function () {
         return "};delete loopObj;";
     };
-    CoreDirectives.prototype.set = function (literal) {
-        return "eval(" + literal.arg(0) + "+\"=\"+" + JSON.stringify(literal.arg(1)) + ");";
-    };
-    CoreDirectives.prototype.define = function (literal) {
-        return "this[" + literal.arg(0) + "] = " + literal.arg(1) + ";";
-    };
-    CoreDirectives.prototype.macro = function (literal) {
-        return "this[" + literal.arg(0) + "] = function(){var name = " + literal.arg(0) + "; var call = this[name]; var args=[].slice.call(arguments);var out = \"\";";
-    };
-    CoreDirectives.prototype.endmacro = function () {
-        return "return out;}";
-    };
-    CoreDirectives.prototype.yield = function (literal) {
-        return "out+=this.escape(" + (literal.arg(0) || literal.arg(1)) + ");";
-    };
-    CoreDirectives.prototype.escape = function (literal) {
-        return "out+=this.escape(" + (literal.arg(0) || literal.arg(1)) + ");";
-    };
-    CoreDirectives.prototype.extends = function (literal) {
-        return "";
-    };
-    CoreDirectives.prototype.include = function (literal) {
-        return "out+=Wax.template(" + literal.arg(0) + ")(" + literal.arg(1) + ",this);";
-    };
-    CoreDirectives.prototype.includeIf = function (literal) {
-        return "out+=(Wax.template(" + literal.arg(0) + ")||new Function(\"return ''\"))(" + literal.arg(1) + ",this);";
-    };
-    CoreDirectives.prototype.includeWhen = function (literal) {
-        return "out+=" + literal.arg(0) + "?Wax.template(" + literal.arg(1) + ")(" + literal.arg(2) + ",this):\"\";";
-    };
-    CoreDirectives.prototype.bind = function (literal) {
-        var hook = literal.arg(1), el = literal.arg(0);
-        return "out+=this[\"bind" + el + "\"]=" + hook + ";setInterval(function(){\n            document.querySelectorAll(" + el + ").forEach(function(hook){\n                if(this[\"bind" + el + "\"] !== " + hook + "){\n                    hook.value = this[\"bind" + el + "\"] = " + hook + "\n                }\n            })\n        });";
-    };
-    CoreDirectives.prototype.json = function (literal) {
-        return "out+=JSON.stringify" + literal;
-    };
-    CoreDirectives.prototype.js = function () {
-        return 'var holdjs = out;';
-    };
-    CoreDirectives.prototype.endjs = function () {
-        return 'holdjs=this.reverse(out).replace(this.reverse(holdjs), "");out=this.reverse(this.reverse(out).replace(holdjs, ""));(new Function(this.reverse(holdjs))).bind(this)();delete holdjs';
-    };
-    CoreDirectives.prototype.comment = function (literal) {
-        return "/*" + literal + "*/";
-    };
     return CoreDirectives;
 }());
 exports.CoreDirectives = CoreDirectives;
 
-},{}],9:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.CoreDirectives = void 0;
-var directives_1 = require("./directives");
-Object.defineProperty(exports, "CoreDirectives", { enumerable: true, get: function () { return directives_1.CoreDirectives; } });
-
-},{"./directives":8}],10:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CoreWax = void 0;
 var core_1 = require("./core");
+var misc_1 = require("./misc");
 var CoreWax = /** @class */ (function () {
     function CoreWax(Wax) {
-        this.directives = new core_1.CoreDirectives;
+        this.directives = new (core_1.CoreDirectives.bind(new misc_1.MiscDirectives));
     }
     return CoreWax;
 }());
 exports.CoreWax = CoreWax;
 
-},{"./core":9}],11:[function(require,module,exports){
+},{"./core":6,"./misc":8}],8:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.MiscDirectives = void 0;
+var MiscDirectives = /** @class */ (function () {
+    function MiscDirectives() {
+    }
+    MiscDirectives.prototype.includeIf = function (literal) {
+        return "out+=(Wax.template(" + literal.arg(0) + ")||new Function(\"return ''\"))(" + literal.arg(1) + ",this);";
+    };
+    MiscDirectives.prototype.includeWhen = function (literal) {
+        return "out+=" + literal.arg(0) + "?Wax.template(" + literal.arg(1) + ")(" + literal.arg(2) + ",this):\"\";";
+    };
+    MiscDirectives.prototype.bind = function (literal) {
+        var hook = literal.arg(1), el = literal.arg(0);
+        return "out+=this[\"bind" + el + "\"]=" + hook + ";setInterval(function(){\n            document.querySelectorAll(" + el + ").forEach(function(hook){\n                if(this[\"bind" + el + "\"] !== " + hook + "){\n                    hook.value = this[\"bind" + el + "\"] = " + hook + "\n                }\n            })\n        });";
+    };
+    MiscDirectives.prototype.escape = function (literal) {
+        return "out+=this.escape(" + (literal.arg(0) || literal.arg(1)) + ");";
+    };
+    MiscDirectives.prototype.json = function (literal) {
+        return "out+=JSON.stringify" + literal;
+    };
+    MiscDirectives.prototype.js = function () {
+        return 'var holdjs = out;';
+    };
+    MiscDirectives.prototype.endjs = function () {
+        return 'holdjs=this.reverse(out).replace(this.reverse(holdjs), "");out=this.reverse(this.reverse(out).replace(holdjs, ""));(new Function(this.reverse(holdjs))).bind(this)();delete holdjs';
+    };
+    MiscDirectives.prototype.comment = function (literal) {
+        return "/*" + literal + "*/";
+    };
+    return MiscDirectives;
+}());
+exports.MiscDirectives = MiscDirectives;
+
+},{}],9:[function(require,module,exports){
 "use strict";
 var __assign = (this && this.__assign) || function () {
     __assign = Object.assign || function(t) {
@@ -459,7 +469,7 @@ module.exports = /** @class */ (function () {
     Wax.template = function (name, source, config) {
         if (config === void 0) { config = this.getConfigs(); }
         if (typeof source === 'string') {
-            this.core.templates[name] = parser_1.genTemplate(parser_1.transpile(Wax, source, Wax.getConfigs()), name);
+            this.core.templates[name] = parser_1.parseTemplate(name, source, Wax);
         }
         return this.core.templates[name];
     };
@@ -494,5 +504,5 @@ module.exports = /** @class */ (function () {
     return Wax;
 }());
 
-},{"./compiler":2,"./compiler/parser":3,"./debug":6,"./plugins":10}]},{},[11])(11)
+},{"./compiler":1,"./compiler/parser":2,"./debug":4,"./plugins":7}]},{},[9])(9)
 });
