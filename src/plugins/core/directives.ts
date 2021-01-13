@@ -31,7 +31,7 @@ export class CoreDirectives {
     }
     
     public forelse(literal: WaxLiteral): string {
-        let obj: string = literal.text().split(/\s+/)[2];
+        const obj: string = literal.text().split(/\s+/)[2];
         return `var loopObj = ${obj};for${literal}{`;
     }
     
@@ -84,8 +84,8 @@ export class CoreDirectives {
     }
     
     public bind(literal: WaxLiteral): string {
-        let hook: string = literal.arg(1)
-            ,el: string = literal.arg(0);
+        const hook: string = literal.arg(1),
+            el: string = literal.arg(0);
         return `out+=this["bind${el}"]=${hook};setInterval(function(){
             document.querySelectorAll(${el}).forEach(function(hook){
                 if(this["bind${el}"] !== ${hook}){

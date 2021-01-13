@@ -1,16 +1,16 @@
 import Wax from './waxe';
 import { readFileSync } from 'fs';
 
-const { 2: action, 3: path } = process.argv
-    ,{ version, description } = require('../package.json')
-    ,{ log, error } = console
-    ,cmdHelp: { [command: string]: string } = {
+const { 2: action, 3: path } = process.argv,
+    { version, description } = require('../package.json'),
+    { log, error } = console,
+    cmdHelp: { [command: string]: string } = {
         render: `[path]\tRenders a template`,
         compile: `[path]\tRenders a template`,
         version: '\tDisplays version info',
         help: '[topic]\tShows this help or help [topic]'
-    }
-    ,parse = (src: string, pagefn: any = Wax.template('cliTest', src)) => {
+    },
+    parse = (src: string, pagefn: any = Wax.template('cliTest', src)) => {
         switch(action){
             case 'render':
                 src ? log(pagefn({})): help(action);
@@ -28,8 +28,8 @@ const { 2: action, 3: path } = process.argv
                 help(action);
                 error('Unrecognized Command or Action!');
         }
-    }
-    ,help = (action?: string) => {
+    },
+    help = (action?: string) => {
         let commands: string = `\nCommands:\n`;
         
         log(`Usage: waxe ${action||'[command]'} [path]\n`);

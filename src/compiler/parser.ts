@@ -15,6 +15,6 @@ export function transpile(parser: Wax, source: string, config: WaxConfig): WaxTe
     return bind(parser, text);
 }
 
-export function genTemplate(template: WaxTemplate = WaxTemplate, name: string = 'waxe-'+Date.now()){
+export function genTemplate(template: WaxTemplate = WaxTemplate, name: string = 'waxe-' + Date.now()){
     return namefn(name, template);
 }

@@ -2,27 +2,26 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.bind = exports.namefn = void 0;
-var _1 = require(".");
 function namefn(name, sourceFn) {
-    var finalFn = new Function('call', 'return function ' + name + '(){return call(this, arguments)}')(Function.apply.bind(sourceFn));
+    var finalFn = new Function('call', 'return function ' + name + '(){return call(this,arguments)}')(Function.apply.bind(sourceFn));
     finalFn.source = sourceFn.source.replace('anonymous', name);
     return finalFn;
 }
 exports.namefn = namefn;
 function bind(parser, source) {
     var _a;
-    var template = _1.WaxTemplate, holder = _1.WaxTemplate;
+    var template = null;
     try {
-        holder = new Function('out', "this.merge(arguments);out+=" + source + ";return out");
-        template = holder.bind((_a = parser.getConfigs()) === null || _a === void 0 ? void 0 : _a.context, '');
+        template = new Function('out', "this.merge(arguments);out+=" + source + ";return out").bind((_a = parser.getConfigs()) === null || _a === void 0 ? void 0 : _a.context, '');
+        template.source = template.toString();
     }
-    catch (e) { }
-    template.source = holder.toString();
+    catch (e) {
+    }
     return template;
 }
 exports.bind = bind;
 
-},{".":2}],2:[function(require,module,exports){
+},{}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.conflictProp = exports.encodeHTML = exports.WaxDelimiter = exports.WaxTemplate = exports.WaxConfig = void 0;
@@ -34,12 +33,12 @@ exports.conflictProp = exports.encodeHTML = exports.WaxDelimiter = exports.WaxTe
  */
 function encodeHTML(html) {
     var encodeRules = {
-        "&": "&#38;",
-        "<": "&#60;",
-        ">": "&#62;",
-        '"': "&#34;",
-        "'": "&#39;",
-        "/": "&#47;",
+        '&': '&#38;',
+        '<': '&#60;',
+        '>': '&#62;',
+        '"': '&#34;',
+        '\'': '&#39;',
+        '/': '&#47;',
     };
     var matchHTML = /&(?!#?\w+;)|<|>|"|'|\//g;
     return typeof html === 'string' ? html.replace(matchHTML, function (m) { return encodeRules[m] || m; }) : html;

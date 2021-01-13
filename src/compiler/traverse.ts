@@ -1,8 +1,8 @@
 export function traverse(source: string, delimiter: WaxDelimiter): WaxTreeRoot {
-    const { argList, blockSyntax, tagName, endPrefix } = delimiter
-        ,text: string = JSON.stringify(source)
-        ,directiveSyntax: string = `(${blockSyntax})`
-        ,directives = text.match(new RegExp(directiveSyntax, 'g'));
+    const { argList, blockSyntax, tagName, endPrefix } = delimiter,
+        text: string = JSON.stringify(source),
+        directiveSyntax: string = `(${blockSyntax})`,
+        directives = text.match(new RegExp(directiveSyntax, 'g'));
     return {
         text,
         directives,
@@ -14,9 +14,9 @@ export function traverse(source: string, delimiter: WaxDelimiter): WaxTreeRoot {
 }
 
 export function traverseNode(walker: WaxWalker, tagOpts: WaxTagOpts): string {
-    const { tag, argLiteral } = tagOpts
-    let result: string = ''
-        ,node: WaxNode = null
+    const { tag, argLiteral } = tagOpts;
+    let result: string = '',
+        node: WaxNode = null
     if (node = walker.parser.getTag(tagOpts)) {
         result = node.descriptor.call(node, argLiteral);
     }

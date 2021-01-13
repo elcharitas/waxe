@@ -3,47 +3,49 @@ import { traverseNode } from './traverse';
 
 export default class Walker implements WaxWalker {
     
-    public directives: RegExpMatchArray
+    public directives: RegExpMatchArray;
     
-    public text: string
+    public text: string;
     
-    public argList: number
+    public argList: number;
     
-    public blockSyntax: string
+    public blockSyntax: string;
     
-    public tagName: number
+    public tagName: number;
     
-    public endPrefix: string
+    public endPrefix: string;
     
-    public jsTags: string[]
+    public jsTags: string[];
     
-    public parser: Wax
+    public parser: Wax;
     
     public constructor(parser: Wax, root: WaxTreeRoot = {}){
         dbg('Walker', this)
-        this.directives = root.directives
-        this.argList = root.argList
-        this.blockSyntax = root.blockSyntax
-        this.tagName = root.tagName
-        this.text = root.text
-        this.endPrefix = root.endPrefix
-        this.jsTags = ['for','if','while','switch']
-        this.parser = parser
+        this.directives = root.directives;
+        this.argList = root.argList;
+        this.blockSyntax = root.blockSyntax;
+        this.tagName = root.tagName;
+        this.text = root.text;
+        this.endPrefix = root.endPrefix;
+        this.jsTags = ['for','if','while','switch'];
+        this.parser = parser;
     }
     
     public walk(text: string = this.text): string
     {
         this.directives?.forEach((rawBlock: string, position: number) => {
-            const block = JSON.parse(`"${rawBlock}"`)
-                ,{
-                    [this.tagName]: tag
-                    ,[this.argList]: argList = ''
-                } = block.match(this.blockSyntax)
-                ,{
-                    configs = {}
-                    ,configs: { context = {} }
-                } = this.parser.core
-                ,argLiteral: WaxLiteral = this.toArgs(argList);
+            const block = JSON.parse(`"${rawBlock}"`),
+                {
+                    [this.tagName]: tag,
+                    [this.argList]: argList = ''
+                } = block.match(this.blockSyntax),
+                {
+                    configs = {},
+                    configs: {
+                        context = {}
+                    }
+                } = this.parser.core,
+                argLiteral: WaxLiteral = this.toArgs(argList);
             text = text.replace(rawBlock, `";${traverseNode(this, { tag, argLiteral, block, position, configs, context })}\nout+="`);
         });
         return text;
