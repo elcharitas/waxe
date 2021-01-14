@@ -5,6 +5,8 @@ interface Function {
     bind(this: Function, thisArg: any, ...argArray: any[]): WaxTemplate;
 }
 
+export const out: string = 'out';
+
 function renameTemplate(name: string, sourceFn: Function, parser: Wax): WaxTemplate {
     return new Function('call', 'return function ' + name + '(){return call(this,arguments)}')(Function.apply.bind(sourceFn.bind(parser.getConfigs().context, '')));
 }
@@ -13,7 +15,7 @@ function bind(source: string): Function {
     let template: Function = WaxTemplate;
 
     try {
-        template = new Function('out', `this.merge(arguments);out+=${source};return out`);
+        template = new Function(out, `this.merge(arguments);${out}+=${source};return ${out}`);
     } catch (e){}
 
     return template;
@@ -50,6 +52,8 @@ export function traverseNode(walker: WaxWalker, tagOpts: WaxTagOpts): string {
     let result: string = '',
         node: WaxNode = null;
     if (node = walker.parser.getTag(tagOpts)) {
+        node.write = (value: WaxLiteral) => `${out}+=${node.exec(value)}`;
+        node.exec = (value: WaxLiteral) => parseString(value, argLiteral);
         result = node.descriptor.call(node, argLiteral);
     }
     else if (walker.jsTags.indexOf(tag) > -1) {
@@ -61,23 +65,33 @@ export function traverseNode(walker: WaxWalker, tagOpts: WaxTagOpts): string {
     return result;
 }
 
-export function parseString(literal: WaxLiteral): string {
+export function parseString(literal: WaxLiteral, argLiteral?: WaxLiteral): string {
     const list: string[] = literal.split('');
     let inString: string = null;
 
     list.forEach((char: string, index: number) => {
+        const nextChar: string = list[index + 1];
         if (char != inString && (inString == '"' || inString == '\'')) {
             inString = char;
-        } else if(inString == char){
+        }
+        else if(inString == char) {
             inString = null;
-        } else if(!inString && char == '$') {
+        }
+        else if(!inString && char == '$' && nextChar != '[') {
             char = 'this.';
-        } else if(!inString && char == ';'){
-            const hold: string = list[index-3]+list[index-2]+list[index-1];
+        }
+        else if (!inString && char == '$' && nextChar == '[') {
+            char = 'this';
+        }
+        else if(!inString && char == ';') {
+            const hold: string = list[index - 3] + list[index - 2] + list[index - 1];
             if(hold.match(/^&(g|l)t$/)){
-                list[index-1] = list[index-2] = list[index-3] = '';
+                list[index - 1] = list[index - 2] = list[index - 3] = '';
                 char = hold.replace('&gt', '>').replace('&lt', '<');
             }
+        }
+        else if(!inString && argLiteral && char == '#' && nextChar == '[') {
+            char = `[${argLiteral.text()}]`;
         }
         
         list[index] = char;

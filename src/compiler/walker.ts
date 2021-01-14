@@ -1,5 +1,5 @@
 import { dbg } from '../debug';
-import { traverseNode, parseString } from './parser';
+import { out, traverseNode, parseString } from './parser';
 
 export default class Walker implements WaxWalker {
     
@@ -27,11 +27,11 @@ export default class Walker implements WaxWalker {
         this.tagName = root.tagName;
         this.text = root.text;
         this.endPrefix = root.endPrefix;
-        this.jsTags = ['for','if','while','switch'];
+        this.jsTags = ['for', 'if', 'while', 'switch'];
         this.parser = parser;
     }
     
-    public walk(text: string = this.text): string
+    public walk(text: string = this.text, layout: string = ''): string
     {
         this.directives?.forEach((rawBlock: string, position: number) => {
             const block = JSON.parse(`"${rawBlock}"`),
@@ -41,9 +41,13 @@ export default class Walker implements WaxWalker {
                 } = block.match(this.blockSyntax),
                 configs = this.parser.getConfigs(),
                 argLiteral: WaxLiteral = this.toArgs(argList);
-            text = text.replace(rawBlock, `";${traverseNode(this, { tag, argLiteral, block, position, configs, context: configs.context })}\nout+="`);
+            if(tag == "extends" && position == 0){
+                layout = `+this.template(${argLiteral.arg(0)})`;
+                return text = text.replace(rawBlock, '');
+            }
+            text = text.replace(rawBlock, `";${traverseNode(this, { tag, argLiteral, block, position, configs, context: configs.context })};\n${out}+="`);
         });
-        return text;
+        return text + layout;
     }
     
     public isBlockEnd(realTag: string='', tag: string = realTag.replace(this.endPrefix,'')): boolean {

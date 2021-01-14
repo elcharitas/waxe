@@ -11,12 +11,13 @@ export = class Wax implements Wax {
      * @var WaxConfig
      */
     public configs: WaxConfig;
-    
+
+    /**
+     * A list of resolved templates
+     */
     public templates: WaxCollection<WaxTemplate>;
     
     public tags: WaxCollection<WaxNode>;
-
-    public plugins: WaxCollection<WaxPlugin>;
 
     private static _core?: Wax;
 
@@ -25,7 +26,6 @@ export = class Wax implements Wax {
         dbg('Wax', this);
         this.configs = WaxConfig;
         this.tags = {};
-        this.plugins = {};
         this.templates = {};
     }
     
@@ -60,7 +60,9 @@ export = class Wax implements Wax {
     public static addPlugin(classLabel: WaxPluginConstruct){
         const { directives = {} } = new classLabel(this);
         for (const tag in directives) {
-            this.directive(tag, directives[tag]);
+            if(typeof directives[tag] === 'function') {
+                this.directive(tag, directives[tag]);
+            }
         }
     }
 

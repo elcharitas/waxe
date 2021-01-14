@@ -237,6 +237,32 @@ declare interface WaxNode extends WaxTagOpts {
      * The function used in describing the current node
      */
     descriptor?: WaxDescriptor;
+    /**
+     * Write a string/{@link Waxliteral|literal} to output.
+     *
+     * Added in v0.0.7+
+     * 
+     * **Example**
+     * ```js
+     * Wax.directive('monkey', function(){
+     *      return this.write('$monkey');
+     * });
+     * ```
+     * Aside `$variable`, `#[argPosition]` can also be used
+     * 
+     * @since 0.0.7
+     * @param value - The string to parse
+     * @returns - A processed string from a literal
+     */
+    write?(value: WaxLiteral): string;
+    /**
+     * This Simply parses a string/{@link Waxliteral|literal} for output.
+     *
+     * @since 0.0.7
+     * @param value - The string to parse
+     * @returns - A processed string from a literal
+     */
+    exec?(value: WaxLiteral): string;
 }
 
 /**
@@ -427,6 +453,7 @@ declare interface WaxCollection<WaxType> {
  *      console.log(typeof Wax === "undefined") // false
  * </script>
  * ```
+ * @alias waxe
  */
 declare module "waxe" {
     /**

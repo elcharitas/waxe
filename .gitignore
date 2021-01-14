@@ -1,4 +1,3 @@
 lib/
 node_modules/
-docs/_dist/
 samples/*.htm

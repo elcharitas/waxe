@@ -1,5 +1,5 @@
 {
-    "name": "WaxeJS",
+    "name": "Waxe.js",
     "exclude": "**/cli.ts",
     "categoryOrder": [
         "Waxe Core",

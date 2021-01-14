@@ -1,3 +1,5 @@
+import { dbg } from '../debug';
+
 /**
  * Encodes HTML to prevent malicious input
  *
@@ -68,11 +70,19 @@ const WaxConfig: WaxConfig = {
         },
         reverse(text: string, delimiter: string = ''): string {
             return text.split(delimiter).reverse().join(delimiter);
+        },
+        template(name: string, context: WaxContext = {}, safe: boolean = false): string {
+            const template: WaxTemplate = require("../waxe").template(name);
+            if(safe == false && !template) {
+                dbg(template, WaxTemplate);
+            }
+            return (template || WaxTemplate)(context);
         }
     }
 };
 
 /** prevent mutation */
+conflictProp(WaxConfig);
 conflictProp(WaxConfig.context);
 
 export {

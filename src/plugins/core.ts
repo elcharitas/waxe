@@ -6,32 +6,36 @@ export class CoreDirectives {
         return `eval(${literal.arg(0)}+"="+${JSON.stringify(literal.arg(1))});`;
     }
     
-    public define(literal: WaxLiteral): string {
-        return `this[${literal.arg(0)}] = ${literal.arg(1)};`;
+    public define(this: WaxNode): string {
+        return this.exec(`$[#[0]]=#[1];`);
     }
-    
-    public macro(literal: WaxLiteral): string {
-        return `this[${literal.arg(0)}] = function(){var name = ${literal.arg(0)}; var call = this[name]; var args=[].slice.call(arguments);var out = "";`;
+
+    public comment(): string {
+        return;
+    }
+
+    public macro(this: WaxNode): string {
+        return this.exec(`$[#[0]]=function(){var name=#[0];var call=$[name];var args=[].slice.call(arguments);var out = "";`);
     }
     
     public endmacro(): string {
         return `return out;}`;
     }
 
-    public include(literal: WaxLiteral): string {
-        return `out+=Wax.template(${literal.arg(0)})(${literal.arg(1)},this);`;
+    public include(this: WaxNode): string {
+        return this.write(`$template(#[0],#[1])`);
     }
     
-    public yield(this: WaxNode, literal: WaxLiteral): string {
-        return `out+=(${this.configs.autoescape} ? this.escape: String)(${literal.arg(0)||literal.arg(1)});`;
+    public yield(this: WaxNode): string {
+        return this.write(`(${this.configs.autoescape} ? $escape: String)(#[0]||#[1])`);
     }
     
     public elseif(literal: WaxLiteral): string {
-        return `} else if(${literal}) {`;
+        return `}else if(${literal}){`;
     }
 
     public else(): string {
-        return '} else {';
+        return '}else{';
     }
 
     public switch(literal: WaxLiteral): string {
@@ -60,7 +64,7 @@ export class CoreDirectives {
     }
     
     public empty(): string {
-        return `} if(typeof loopObj !== "object" || Object.keys(loopObj).length < 1){`;
+        return `} if(typeof loopObj!=="object"||Object.keys(loopObj).length<1){`;
     }
     
     public endforelse(): string {

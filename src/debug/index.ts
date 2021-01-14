@@ -15,7 +15,7 @@ export function debugProp(object: any, property: string): boolean {
 export function dbgType(args: string[], constraint: any, expected: any): string[] {
     
     if(typeof constraint !== typeof expected){
-        args.push(typeof expected);
+        args.push(expected?.name || typeof expected);
     }
     
     if(typeof constraint === 'undefined' && typeof expected === 'object'){

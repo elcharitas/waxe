@@ -16,7 +16,7 @@ const { 2: action, 3: path } = process.argv,
                 src ? log(pagefn({})): help(action);
             break;
             case 'compile':
-                src ? log(pagefn.source): help(action);
+                src ? log(pagefn.toString()): help(action);
             break;
             case 'help':
                 help(path);

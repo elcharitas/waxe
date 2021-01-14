@@ -1,44 +1,32 @@
 export class MiscDirectives {
     
     [name: string]: WaxDescriptor;
-    
-    public includeIf(literal: WaxLiteral): string {
-        return `out+=(Wax.template(${literal.arg(0)})||new Function("return ''"))(${literal.arg(1)},this);`;
+
+    public includeIf(this: WaxNode): string {
+        return this.write(`$template(#[0],#[1],1)`);
     }
 
-    public includeWhen(literal: WaxLiteral): string {
-        return `out+=${literal.arg(0)}?Wax.template(${literal.arg(1)})(${literal.arg(2)},this):"";`;
+    public includeWhen(this: WaxNode): string {
+        return this.write(`#[0]?$template(#[1],#[2]):''`);
     }
     
-    public bind(literal: WaxLiteral): string {
-        const hook: string = literal.arg(1),
-            el: string = literal.arg(0);
-        return `out+=this["bind${el}"]=${hook};setInterval(function(){
-            document.querySelectorAll(${el}).forEach(function(hook){
-                if(this["bind${el}"] !== ${hook}){
-                    hook.value = this["bind${el}"] = ${hook}
-                }
-            })
-        });`;
+    public bind(this: WaxNode): string {
+        return this.write(`$["bind"+#[0]]=#[1];setInterval(function(){document.querySelectorAll(#[0]).forEach(function(hook){if($["bind"+#[0]]!==#[1]){hook.value = this["bind"+#[0]]=#[1]}})})`);
     }
     
-    public escape(literal: WaxLiteral): string {
-        return `out+=this.escape(${literal.arg(0)||literal.arg(1)});`;
+    public escape(this: WaxNode): string {
+        return this.write(`$escape(#[0]||#[1])`);
     }
     
-    public json(literal: WaxLiteral): string {
-        return `out+=JSON.stringify${literal}`;
+    public json(this: WaxNode, literal: WaxLiteral): string {
+        return this.write(`JSON.stringify${literal}`);
     }
     
     public js(): string {
-        return 'var holdjs = out;';
+        return 'var hjs=out;';
     }
     
-    public endjs(): string {
-        return 'holdjs=this.reverse(out).replace(this.reverse(holdjs), "");out=this.reverse(this.reverse(out).replace(holdjs, ""));(new Function(this.reverse(holdjs))).bind(this)();delete holdjs';
+    public endjs(this: WaxNode): string {
+        return this.exec(`hjs=$reverse(out).replace($reverse(hjs),"");out=$reverse($reverse(out).replace(hjs,""));(new Function($reverse(hjs))).bind(this)();delete hjs`);
     }
-
-    public comment(literal: WaxLiteral): string {
-        return `/*${literal}*/`;
-    }
-}
+};

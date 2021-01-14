@@ -2,6 +2,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.conflictProp = exports.encodeHTML = exports.WaxDelimiter = exports.WaxTemplate = exports.WaxConfig = void 0;
+var debug_1 = require("../debug");
 /**
  * Encodes HTML to prevent malicious input
  *
@@ -78,29 +79,40 @@ var WaxConfig = {
         reverse: function (text, delimiter) {
             if (delimiter === void 0) { delimiter = ''; }
             return text.split(delimiter).reverse().join(delimiter);
+        },
+        template: function (name, context, safe) {
+            if (context === void 0) { context = {}; }
+            if (safe === void 0) { safe = false; }
+            var template = require("../waxe").template(name);
+            if (safe == false && !template) {
+                debug_1.dbg(template, WaxTemplate);
+            }
+            return (template || WaxTemplate)(context);
         }
     }
 };
 exports.WaxConfig = WaxConfig;
 /** prevent mutation */
-conflictProp(WaxConfig.context, ['now']);
+conflictProp(WaxConfig);
+conflictProp(WaxConfig.context);
 
-},{}],2:[function(require,module,exports){
+},{"../debug":4,"../waxe":9}],2:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseTemplate = exports.parseString = exports.traverseNode = void 0;
+exports.parseTemplate = exports.parseString = exports.traverseNode = exports.out = void 0;
 var _1 = require(".");
 var walker_1 = __importDefault(require("./walker"));
+exports.out = 'out';
 function renameTemplate(name, sourceFn, parser) {
     return new Function('call', 'return function ' + name + '(){return call(this,arguments)}')(Function.apply.bind(sourceFn.bind(parser.getConfigs().context, '')));
 }
 function bind(source) {
     var template = _1.WaxTemplate;
     try {
-        template = new Function('out', "this.merge(arguments);out+=" + source + ";return out");
+        template = new Function(exports.out, "this.merge(arguments);" + exports.out + "+=" + source + ";return " + exports.out);
     }
     catch (e) { }
     return template;
@@ -128,6 +140,8 @@ function traverseNode(walker, tagOpts) {
     var tag = tagOpts.tag, argLiteral = tagOpts.argLiteral;
     var result = '', node = null;
     if (node = walker.parser.getTag(tagOpts)) {
+        node.write = function (value) { return exports.out + "+=" + node.exec(value); };
+        node.exec = function (value) { return parseString(value, argLiteral); };
         result = node.descriptor.call(node, argLiteral);
     }
     else if (walker.jsTags.indexOf(tag) > -1) {
@@ -139,18 +153,22 @@ function traverseNode(walker, tagOpts) {
     return result;
 }
 exports.traverseNode = traverseNode;
-function parseString(literal) {
+function parseString(literal, argLiteral) {
     var list = literal.split('');
     var inString = null;
     list.forEach(function (char, index) {
+        var nextChar = list[index + 1];
         if (char != inString && (inString == '"' || inString == '\'')) {
             inString = char;
         }
         else if (inString == char) {
             inString = null;
         }
-        else if (!inString && char == '$') {
+        else if (!inString && char == '$' && nextChar != '[') {
             char = 'this.';
+        }
+        else if (!inString && char == '$' && nextChar == '[') {
+            char = 'this';
         }
         else if (!inString && char == ';') {
             var hold = list[index - 3] + list[index - 2] + list[index - 1];
@@ -158,6 +176,9 @@ function parseString(literal) {
                 list[index - 1] = list[index - 2] = list[index - 3] = '';
                 char = hold.replace('&gt', '>').replace('&lt', '<');
             }
+        }
+        else if (!inString && argLiteral && char == '#' && nextChar == '[') {
+            char = "[" + argLiteral.text() + "]";
         }
         list[index] = char;
     });
@@ -190,15 +211,20 @@ var Walker = /** @class */ (function () {
         this.jsTags = ['for', 'if', 'while', 'switch'];
         this.parser = parser;
     }
-    Walker.prototype.walk = function (text) {
+    Walker.prototype.walk = function (text, layout) {
         var _this = this;
         var _a;
         if (text === void 0) { text = this.text; }
+        if (layout === void 0) { layout = ''; }
         (_a = this.directives) === null || _a === void 0 ? void 0 : _a.forEach(function (rawBlock, position) {
             var block = JSON.parse("\"" + rawBlock + "\""), _a = block.match(_this.blockSyntax), _b = _this.tagName, tag = _a[_b], _c = _this.argList, _d = _a[_c], argList = _d === void 0 ? '' : _d, configs = _this.parser.getConfigs(), argLiteral = _this.toArgs(argList);
-            text = text.replace(rawBlock, "\";" + parser_1.traverseNode(_this, { tag: tag, argLiteral: argLiteral, block: block, position: position, configs: configs, context: configs.context }) + "\nout+=\"");
+            if (tag == "extends" && position == 0) {
+                layout = "+this.template(" + argLiteral.arg(0) + ")";
+                return text = text.replace(rawBlock, '');
+            }
+            text = text.replace(rawBlock, "\";" + parser_1.traverseNode(_this, { tag: tag, argLiteral: argLiteral, block: block, position: position, configs: configs, context: configs.context }) + ";\n" + parser_1.out + "+=\"");
         });
-        return text;
+        return text + layout;
     };
     Walker.prototype.isBlockEnd = function (realTag, tag) {
         if (realTag === void 0) { realTag = ''; }
@@ -255,7 +281,7 @@ function debugProp(object, property) {
 exports.debugProp = debugProp;
 function dbgType(args, constraint, expected) {
     if (typeof constraint !== typeof expected) {
-        args.push(typeof expected);
+        args.push((expected === null || expected === void 0 ? void 0 : expected.name) || typeof expected);
     }
     if (typeof constraint === 'undefined' && typeof expected === 'object') {
         args.push('initialized');
@@ -311,26 +337,29 @@ var CoreDirectives = /** @class */ (function () {
     CoreDirectives.prototype.set = function (literal) {
         return "eval(" + literal.arg(0) + "+\"=\"+" + JSON.stringify(literal.arg(1)) + ");";
     };
-    CoreDirectives.prototype.define = function (literal) {
-        return "this[" + literal.arg(0) + "] = " + literal.arg(1) + ";";
+    CoreDirectives.prototype.define = function () {
+        return this.exec("$[#[0]]=#[1];");
     };
-    CoreDirectives.prototype.macro = function (literal) {
-        return "this[" + literal.arg(0) + "] = function(){var name = " + literal.arg(0) + "; var call = this[name]; var args=[].slice.call(arguments);var out = \"\";";
+    CoreDirectives.prototype.comment = function () {
+        return;
+    };
+    CoreDirectives.prototype.macro = function () {
+        return this.exec("$[#[0]]=function(){var name=#[0];var call=$[name];var args=[].slice.call(arguments);var out = \"\";");
     };
     CoreDirectives.prototype.endmacro = function () {
         return "return out;}";
     };
-    CoreDirectives.prototype.include = function (literal) {
-        return "out+=Wax.template(" + literal.arg(0) + ")(" + literal.arg(1) + ",this);";
+    CoreDirectives.prototype.include = function () {
+        return this.write("$template(#[0],#[1])");
     };
-    CoreDirectives.prototype.yield = function (literal) {
-        return "out+=(" + this.configs.autoescape + " ? this.escape: String)(" + (literal.arg(0) || literal.arg(1)) + ");";
+    CoreDirectives.prototype.yield = function () {
+        return this.write("(" + this.configs.autoescape + " ? $escape: String)(#[0]||#[1])");
     };
     CoreDirectives.prototype.elseif = function (literal) {
-        return "} else if(" + literal + ") {";
+        return "}else if(" + literal + "){";
     };
     CoreDirectives.prototype.else = function () {
-        return '} else {';
+        return '}else{';
     };
     CoreDirectives.prototype.switch = function (literal) {
         return "switch" + literal + "{/*";
@@ -352,7 +381,7 @@ var CoreDirectives = /** @class */ (function () {
         return "var loopObj = " + obj + ";for" + literal + "{";
     };
     CoreDirectives.prototype.empty = function () {
-        return "} if(typeof loopObj !== \"object\" || Object.keys(loopObj).length < 1){";
+        return "} if(typeof loopObj!==\"object\"||Object.keys(loopObj).length<1){";
     };
     CoreDirectives.prototype.endforelse = function () {
         return "};delete loopObj;";
@@ -382,34 +411,31 @@ exports.MiscDirectives = void 0;
 var MiscDirectives = /** @class */ (function () {
     function MiscDirectives() {
     }
-    MiscDirectives.prototype.includeIf = function (literal) {
-        return "out+=(Wax.template(" + literal.arg(0) + ")||new Function(\"return ''\"))(" + literal.arg(1) + ",this);";
+    MiscDirectives.prototype.includeIf = function () {
+        return this.write("$template(#[0],#[1],1)");
     };
-    MiscDirectives.prototype.includeWhen = function (literal) {
-        return "out+=" + literal.arg(0) + "?Wax.template(" + literal.arg(1) + ")(" + literal.arg(2) + ",this):\"\";";
+    MiscDirectives.prototype.includeWhen = function () {
+        return this.write("#[0]?$template(#[1],#[2]):''");
     };
-    MiscDirectives.prototype.bind = function (literal) {
-        var hook = literal.arg(1), el = literal.arg(0);
-        return "out+=this[\"bind" + el + "\"]=" + hook + ";setInterval(function(){\n            document.querySelectorAll(" + el + ").forEach(function(hook){\n                if(this[\"bind" + el + "\"] !== " + hook + "){\n                    hook.value = this[\"bind" + el + "\"] = " + hook + "\n                }\n            })\n        });";
+    MiscDirectives.prototype.bind = function () {
+        return this.write("$[\"bind\"+#[0]]=#[1];setInterval(function(){document.querySelectorAll(#[0]).forEach(function(hook){if($[\"bind\"+#[0]]!==#[1]){hook.value = this[\"bind\"+#[0]]=#[1]}})})");
     };
-    MiscDirectives.prototype.escape = function (literal) {
-        return "out+=this.escape(" + (literal.arg(0) || literal.arg(1)) + ");";
+    MiscDirectives.prototype.escape = function () {
+        return this.write("$escape(#[0]||#[1])");
     };
     MiscDirectives.prototype.json = function (literal) {
-        return "out+=JSON.stringify" + literal;
+        return this.write("JSON.stringify" + literal);
     };
     MiscDirectives.prototype.js = function () {
-        return 'var holdjs = out;';
+        return 'var hjs=out;';
     };
     MiscDirectives.prototype.endjs = function () {
-        return 'holdjs=this.reverse(out).replace(this.reverse(holdjs), "");out=this.reverse(this.reverse(out).replace(holdjs, ""));(new Function(this.reverse(holdjs))).bind(this)();delete holdjs';
-    };
-    MiscDirectives.prototype.comment = function (literal) {
-        return "/*" + literal + "*/";
+        return this.exec("hjs=$reverse(out).replace($reverse(hjs),\"\");out=$reverse($reverse(out).replace(hjs,\"\"));(new Function($reverse(hjs))).bind(this)();delete hjs");
     };
     return MiscDirectives;
 }());
 exports.MiscDirectives = MiscDirectives;
+;
 
 },{}],9:[function(require,module,exports){
 "use strict";
@@ -433,7 +459,6 @@ module.exports = /** @class */ (function () {
         debug_1.dbg('Wax', this);
         this.configs = compiler_1.WaxConfig;
         this.tags = {};
-        this.plugins = {};
         this.templates = {};
     }
     Wax.global = function (name, value) {
@@ -462,7 +487,9 @@ module.exports = /** @class */ (function () {
     Wax.addPlugin = function (classLabel) {
         var _a = new classLabel(this).directives, directives = _a === void 0 ? {} : _a;
         for (var tag in directives) {
-            this.directive(tag, directives[tag]);
+            if (typeof directives[tag] === 'function') {
+                this.directive(tag, directives[tag]);
+            }
         }
     };
     Wax.template = function (name, source, config) {
