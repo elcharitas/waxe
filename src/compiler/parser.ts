@@ -8,7 +8,7 @@ interface Function {
 export const out: string = 'out';
 
 function renameTemplate(name: string, sourceFn: Function, parser: Wax): WaxTemplate {
-    return new Function('call', 'return function ' + name + '(){return call(this,arguments)}')(Function.apply.bind(sourceFn.bind(parser.getConfigs().context, '')));
+    return new Function('call', 'return function ' + name.replace(/[\/\.\-]+/g,'') + '(){return call(this,arguments)}')(Function.apply.bind(sourceFn.bind(parser.getConfigs().context, '')));
 }
 
 function bind(source: string): Function {

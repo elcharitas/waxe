@@ -10,7 +10,7 @@
   "scripts": {
     "test": "mocha",
     "sample": "node lib/cli.js render samples/index.waxe > samples/index.htm",
-    "docs": "typedoc waxe.d.ts --tsconfig src/tsconfig.json --options docs/options.json --readme docs/index.md --theme docs/theme --out docs/_dist/api",
+    "docs": "cd docs && node generate.js",
     "build:src": "rm -rf lib && tsc -b src",
     "build:dist": "browserify lib/waxe.js -s Wax > dist/waxe.js",
     "build:ugly": "uglifyjs -c 'expression=true,unsafe_proto=true,unsafe=true' -m -o dist/waxe.min.js dist/waxe.js",

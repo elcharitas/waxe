@@ -108,7 +108,7 @@ var _1 = require(".");
 var walker_1 = __importDefault(require("./walker"));
 exports.out = 'out';
 function renameTemplate(name, sourceFn, parser) {
-    return new Function('call', 'return function ' + name + '(){return call(this,arguments)}')(Function.apply.bind(sourceFn.bind(parser.getConfigs().context, '')));
+    return new Function('call', 'return function ' + name.replace(/[\/\.\-]+/g, '') + '(){return call(this,arguments)}')(Function.apply.bind(sourceFn.bind(parser.getConfigs().context, '')));
 }
 function bind(source) {
     var template = _1.WaxTemplate;

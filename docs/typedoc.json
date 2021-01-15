@@ -1,0 +1,9 @@
+{
+    "name": "Waxe.js",
+    "exclude": "**/cli.ts",
+    "disableOutputCheck": true,
+    "tsconfig": "../src/tsconfig.json",
+    "entryPoints": ["../waxe.d.ts"],
+    "readme": "./index.md",
+    "theme": "./theme"
+}
