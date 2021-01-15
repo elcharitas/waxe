@@ -1,6 +1,6 @@
 const fs = require('fs');
 const docs = require('typedoc');
-const wax = require('../lib/waxe');
+const wax = require('../dist/waxe');
 const { resolve } = require('path')
 const glob = require('glob');
 const cwd = process.cwd();
