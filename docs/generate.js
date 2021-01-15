@@ -26,7 +26,9 @@ async function main() {
         await app.generateDocs(project, outputDir);
         srcObj.forEach(src => {
             const path = resolve(module.path, src);
-            fs.writeFileSync(src.replace('src', '_dist').replace('waxe', 'html'), wax.template(src, fs.readFileSync(path).toString())?.call({}) || '')
+            const outPath = src.replace('src', '_dist').replace('waxe', 'html');
+            const tpl = wax.template(src, fs.readFileSync(path).toString());
+            fs.writeFileSync(outPath, tpl.call({}) || '')
         });
     }
 }
