@@ -1,6 +1,0 @@
-{
-    "TypeError": [
-        "%1 should be of %2's type",
-        "%1 should be %3 as a %2"
-    ]
-}

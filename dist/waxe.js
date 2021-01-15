@@ -96,7 +96,7 @@ exports.WaxConfig = WaxConfig;
 conflictProp(WaxConfig);
 conflictProp(WaxConfig.context);
 
-},{"../debug":4,"../waxe":9}],2:[function(require,module,exports){
+},{"../debug":4,"../waxe":8}],2:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -249,85 +249,45 @@ var Walker = /** @class */ (function () {
 exports.default = Walker;
 
 },{"../debug":4,"./parser":2}],4:[function(require,module,exports){
-(function (global){(function (){
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.dbg = exports.formatDbg = exports.dbgType = exports.debugProp = exports.debugkit = void 0;
-var MessageList = __importStar(require("./list.json"));
-var Message = MessageList;
-exports.debugkit = typeof global !== 'undefined' ? global : window;
-function debugProp(object, property) {
-    return Object.prototype.hasOwnProperty.call(object, property);
-}
-exports.debugProp = debugProp;
-function dbgType(args, constraint, expected) {
-    if (typeof constraint !== typeof expected) {
-        args.push((expected === null || expected === void 0 ? void 0 : expected.name) || typeof expected);
+exports.dbg = exports.debugProp = void 0;
+var debugMessages = [
+    "%1 should be %2 as %3",
+    "%1 should be %3 as a %2"
+];
+var debugStack = TypeError;
+function debugType(args, constraint, expected) {
+    var expectedType = typeof expected;
+    if (typeof constraint !== expectedType) {
+        args.push((expected === null || expected === void 0 ? void 0 : expected.name) || expectedType);
     }
-    if (typeof constraint === 'undefined' && typeof expected === 'object') {
+    if (typeof constraint === 'undefined' && expectedType === 'object') {
         args.push('initialized');
     }
-    else if (typeof expected !== 'object') {
+    else if (expectedType !== 'object' || expected === null && constraint !== null) {
+        args.push(expectedType);
         args.push('declared');
     }
     return args;
 }
-exports.dbgType = dbgType;
-function formatDbg(name, args) {
-    if (debugProp(Message, name)) {
-        var _a = Message, _b = name, _c = args.length - 2, _d = _a[_b][_c], msg_1 = _d === void 0 ? '' : _d;
-        args.forEach(function (arg, index) {
-            msg_1 = msg_1.replace("%" + (index + 1), arg === null || arg === void 0 ? void 0 : arg.toString());
-        });
-        return msg_1;
-    }
+function debugProp(object, property) {
+    return Object.prototype.hasOwnProperty.call(object, property);
 }
-exports.formatDbg = formatDbg;
-function dbg(check, constraint, expected, dbgFor) {
+exports.debugProp = debugProp;
+function dbg(check, constraint, expected) {
     if (expected === void 0) { expected = {}; }
-    if (dbgFor === void 0) { dbgFor = 'Type'; }
-    var args = [], debugArg = check === null || check === void 0 ? void 0 : check.toString(), debugStack = null;
-    dbgFor += 'Error';
-    if (debugProp(exports.debugkit, dbgFor)) {
-        args = dbgType([check], constraint, expected);
-        debugStack = exports.debugkit[dbgFor];
-        debugArg = formatDbg(dbgFor, args);
-    }
+    var args = debugType([check], constraint, expected), dbgFor = '', _a = debugMessages, _b = args.length - 2, _c = _a[_b], debugInfo = _c === void 0 ? 'Unknown' : _c;
+    args.forEach(function (arg, index) {
+        debugInfo = debugInfo.replace("%" + (index + 1), arg);
+    });
     if (args.length > 1 && debugStack !== null) {
-        throw new debugStack(debugArg);
+        throw new debugStack(debugInfo);
     }
 }
 exports.dbg = dbg;
 
-}).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./list.json":5}],5:[function(require,module,exports){
-module.exports={
-    "TypeError": [
-        "%1 should be of %2's type",
-        "%1 should be %3 as a %2"
-    ]
-}
-
-},{}],6:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CoreDirectives = void 0;
@@ -335,7 +295,7 @@ var CoreDirectives = /** @class */ (function () {
     function CoreDirectives() {
     }
     CoreDirectives.prototype.set = function (literal) {
-        return "eval(" + literal.arg(0) + "+\"=\"+" + JSON.stringify(literal.arg(1)) + ");";
+        return this.exec("eval(#[0]+\"=\"+$escape(JSON.stringify(#[1])));");
     };
     CoreDirectives.prototype.define = function () {
         return this.exec("$[#[0]]=#[1];");
@@ -353,7 +313,7 @@ var CoreDirectives = /** @class */ (function () {
         return this.write("$template(#[0],#[1])");
     };
     CoreDirectives.prototype.yield = function () {
-        return this.write("(" + this.configs.autoescape + " ? $escape: String)(#[0]||#[1])");
+        return this.write("(" + this.configs.autoescape + "?$escape:String)(#[0]||#[1])");
     };
     CoreDirectives.prototype.elseif = function (literal) {
         return "}else if(" + literal + "){";
@@ -378,7 +338,7 @@ var CoreDirectives = /** @class */ (function () {
     };
     CoreDirectives.prototype.forelse = function (literal) {
         var obj = literal.text().split(/\s+/)[2];
-        return "var loopObj = " + obj + ";for" + literal + "{";
+        return "var loopObj=" + obj + ";for" + literal + "{";
     };
     CoreDirectives.prototype.empty = function () {
         return "} if(typeof loopObj!==\"object\"||Object.keys(loopObj).length<1){";
@@ -390,7 +350,7 @@ var CoreDirectives = /** @class */ (function () {
 }());
 exports.CoreDirectives = CoreDirectives;
 
-},{}],7:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CoreWax = void 0;
@@ -404,7 +364,7 @@ var CoreWax = /** @class */ (function () {
 }());
 exports.CoreWax = CoreWax;
 
-},{"./core":6,"./misc":8}],8:[function(require,module,exports){
+},{"./core":5,"./misc":7}],7:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MiscDirectives = void 0;
@@ -437,7 +397,7 @@ var MiscDirectives = /** @class */ (function () {
 exports.MiscDirectives = MiscDirectives;
 ;
 
-},{}],9:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 "use strict";
 var __assign = (this && this.__assign) || function () {
     __assign = Object.assign || function(t) {
@@ -450,85 +410,89 @@ var __assign = (this && this.__assign) || function () {
     };
     return __assign.apply(this, arguments);
 };
+var _a;
 var debug_1 = require("./debug");
 var compiler_1 = require("./compiler");
 var parser_1 = require("./compiler/parser");
 var plugins_1 = require("./plugins");
-module.exports = /** @class */ (function () {
-    function Wax() {
-        debug_1.dbg('Wax', this);
-        this.configs = compiler_1.WaxConfig;
-        this.tags = {};
-        this.templates = {};
-    }
-    Wax.global = function (name, value) {
-        if (value === void 0) { value = null; }
-        return this.core.configs.context[name] = value;
-    };
-    Wax.directive = function (tag, descriptor) {
-        return this.core.tags[tag] = { tag: tag, descriptor: descriptor };
-    };
-    Wax.setDelimiter = function (delimiter) {
-        return Wax.core.configs.delimiter = __assign(__assign({}, Wax.getDelimiter()), delimiter);
-    };
-    Wax.getConfigs = function () {
-        return Wax.core.configs;
-    };
-    Wax.getDelimiter = function () {
-        return Wax.getConfigs().delimiter;
-    };
-    Wax.getTag = function (tagOpts) {
-        var tagDef = this.core.tags[tagOpts.tag] || null;
-        if (typeof tagDef === 'object' && tagDef !== null) {
-            tagDef = __assign(__assign({}, tagDef), tagOpts);
+module.exports = (_a = /** @class */ (function () {
+        function Wax() {
+            debug_1.dbg('Wax', this);
+            debug_1.dbg('Wax', Wax._core, null);
+            this.configs = compiler_1.WaxConfig;
+            this.tags = {};
+            this.templates = {};
         }
-        return tagDef;
-    };
-    Wax.addPlugin = function (classLabel) {
-        var _a = new classLabel(this).directives, directives = _a === void 0 ? {} : _a;
-        for (var tag in directives) {
-            if (typeof directives[tag] === 'function') {
-                this.directive(tag, directives[tag]);
+        Wax.global = function (name, value) {
+            if (value === void 0) { value = null; }
+            return this.core.configs.context[name] = value;
+        };
+        Wax.directive = function (tag, descriptor) {
+            return this.core.tags[tag] = { tag: tag, descriptor: descriptor };
+        };
+        Wax.setDelimiter = function (delimiter) {
+            return Wax.core.configs.delimiter = __assign(__assign({}, Wax.getDelimiter()), delimiter);
+        };
+        Wax.getConfigs = function () {
+            return Wax.core.configs;
+        };
+        Wax.getDelimiter = function () {
+            return Wax.getConfigs().delimiter;
+        };
+        Wax.getTag = function (tagOpts) {
+            var tagDef = this.core.tags[tagOpts.tag] || null;
+            if (typeof tagDef === 'object' && tagDef !== null) {
+                tagDef = __assign(__assign({}, tagDef), tagOpts);
             }
-        }
-    };
-    Wax.template = function (name, source, config) {
-        if (config === void 0) { config = this.getConfigs(); }
-        if (typeof source === 'string') {
-            this.core.templates[name] = parser_1.parseTemplate(name, source, Wax);
-        }
-        return this.core.templates[name];
-    };
-    Wax.resolve = function (selectors, context, visible) {
-        if (context === void 0) { context = {}; }
-        if (visible === void 0) { visible = true; }
-        if (typeof document !== 'undefined') {
-            document.querySelectorAll(selectors).forEach(function (element) {
-                element.innerHTML = element.value = Wax.template(element.id, element.value || element.innerHTML)(context);
-                if ('hidden' in element)
-                    element.hidden = !visible;
-            });
-        }
-        ;
-    };
-    Object.defineProperty(Wax, "core", {
-        /**
-         * Gets or Creates the Wax instance
-         *
-         * @returns The created Wax Instance
-         */
-        get: function () {
-            if (!(this._core instanceof Wax)) {
-                this._core = new Wax;
-                Wax.addPlugin(plugins_1.CoreWax);
+            return tagDef;
+        };
+        Wax.addPlugin = function (classLabel) {
+            var _a = new classLabel(this).directives, directives = _a === void 0 ? {} : _a;
+            for (var tag in directives) {
+                if (typeof directives[tag] === 'function') {
+                    this.directive(tag, directives[tag]);
+                }
             }
-            return this._core;
-        },
-        enumerable: false,
-        configurable: true
-    });
-    return Wax;
-}());
+        };
+        Wax.template = function (name, source, config) {
+            if (config === void 0) { config = this.getConfigs(); }
+            if (typeof source === 'string') {
+                this.core.templates[name] = parser_1.parseTemplate(name, source, Wax);
+            }
+            return this.core.templates[name];
+        };
+        Wax.resolve = function (selectors, context, visible) {
+            if (context === void 0) { context = {}; }
+            if (visible === void 0) { visible = true; }
+            if (typeof document !== 'undefined') {
+                document.querySelectorAll(selectors).forEach(function (element) {
+                    element.innerHTML = element.value = Wax.template(element.id, element.value || element.innerHTML)(context);
+                    if ('hidden' in element)
+                        element.hidden = !visible;
+                });
+            }
+            ;
+        };
+        Object.defineProperty(Wax, "core", {
+            /**
+             * Gets or Creates the Wax instance
+             *
+             * @returns The created Wax Instance
+             */
+            get: function () {
+                if (!(this._core instanceof Wax)) {
+                    this._core = new Wax;
+                    Wax.addPlugin(plugins_1.CoreWax);
+                }
+                return this._core;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        return Wax;
+    }()),
+    _a._core = null,
+    _a);
 
-},{"./compiler":1,"./compiler/parser":2,"./debug":4,"./plugins":7}]},{},[9])(9)
+},{"./compiler":1,"./compiler/parser":2,"./debug":4,"./plugins":6}]},{},[8])(8)
 });

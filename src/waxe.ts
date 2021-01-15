@@ -19,11 +19,12 @@ export = class Wax implements Wax {
     
     public tags: WaxCollection<WaxNode>;
 
-    private static _core?: Wax;
+    private static _core: Wax = null;
 
     private constructor()
     {
         dbg('Wax', this);
+        dbg('Wax', Wax._core, null);
         this.configs = WaxConfig;
         this.tags = {};
         this.templates = {};

@@ -3,7 +3,7 @@ export class CoreDirectives {
     [name: string]: WaxDescriptor;
     
     public set(literal: WaxLiteral): string {
-        return `eval(${literal.arg(0)}+"="+${JSON.stringify(literal.arg(1))});`;
+        return this.exec(`eval(#[0]+"="+$escape(JSON.stringify(#[1])));`);
     }
     
     public define(this: WaxNode): string {
@@ -27,7 +27,7 @@ export class CoreDirectives {
     }
     
     public yield(this: WaxNode): string {
-        return this.write(`(${this.configs.autoescape} ? $escape: String)(#[0]||#[1])`);
+        return this.write(`(${this.configs.autoescape}?$escape:String)(#[0]||#[1])`);
     }
     
     public elseif(literal: WaxLiteral): string {
@@ -60,7 +60,7 @@ export class CoreDirectives {
     
     public forelse(literal: WaxLiteral): string {
         const obj: string = literal.text().split(/\s+/)[2];
-        return `var loopObj = ${obj};for${literal}{`;
+        return `var loopObj=${obj};for${literal}{`;
     }
     
     public empty(): string {
