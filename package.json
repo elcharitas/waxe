@@ -9,7 +9,7 @@
   },
   "scripts": {
     "test": "mocha",
-    "schip": "schip render samples/base.waxe > samples/base.htm",
+    "schip": "schip render samples/index.waxe > samples/index.htm",
     "docs": "typedoc waxe.d.ts --tsconfig src/tsconfig.json --options docs/options.json --readme docs/index.md --theme docs/theme --out docs/_dist/api",
     "build:src": "rm -rf lib && tsc -b src",
     "build:dist": "browserify lib/waxe.js -s Wax > dist/waxe.js",
