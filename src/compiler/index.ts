@@ -48,6 +48,7 @@ const WaxConfig: WaxConfig = {
     delimiter: WaxDelimiter,
     context: {
         startTime: Date.now(),
+        json: JSON.stringify,
         now(): number {
             return Date.now();
         },

@@ -53,6 +53,7 @@ var WaxConfig = {
     delimiter: WaxDelimiter,
     context: {
         startTime: Date.now(),
+        json: JSON.stringify,
         now: function () {
             return Date.now();
         },
@@ -141,7 +142,7 @@ function traverseNode(walker, tagOpts) {
     var result = '', node = null;
     if (node = walker.parser.getTag(tagOpts)) {
         node.write = function (value) { return exports.out + "+=" + node.exec(value); };
-        node.exec = function (value) { return parseString(value, argLiteral); };
+        node.exec = function (value) { return parseString(value, argLiteral, true); };
         result = node.descriptor.call(node, argLiteral);
     }
     else if (walker.jsTags.indexOf(tag) > -1) {
@@ -153,7 +154,7 @@ function traverseNode(walker, tagOpts) {
     return result;
 }
 exports.traverseNode = traverseNode;
-function parseString(literal, argLiteral) {
+function parseString(literal, argLiteral, createScope) {
     var list = literal.split('');
     var inString = null;
     list.forEach(function (char, index) {
@@ -177,11 +178,14 @@ function parseString(literal, argLiteral) {
                 char = hold.replace('&gt', '>').replace('&lt', '<');
             }
         }
-        else if (!inString && argLiteral && char == '#' && nextChar == '[') {
-            char = "[" + argLiteral.text() + "]";
+        else if (!inString && char == '#' && nextChar == '[') {
+            char = 'arguments';
         }
         list[index] = char;
     });
+    if (createScope == true) {
+        return "new Function(" + JSON.stringify('return ' + list.join('')) + ").apply(this,[" + (argLiteral ? argLiteral.text() : '') + "]);";
+    }
     return list.join('');
 }
 exports.parseString = parseString;
@@ -222,7 +226,7 @@ var Walker = /** @class */ (function () {
                 layout = "+this.template(" + argLiteral.arg(0) + ")";
                 return text = text.replace(rawBlock, '');
             }
-            text = text.replace(rawBlock, "\";" + parser_1.traverseNode(_this, { tag: tag, argLiteral: argLiteral, block: block, position: position, configs: configs, context: configs.context }) + ";\n" + parser_1.out + "+=\"");
+            text = text.replace(rawBlock, "\";" + parser_1.traverseNode(_this, { tag: tag, argLiteral: argLiteral, block: block, position: position, configs: configs, context: configs.context }) + "\n" + parser_1.out + "+=\"");
         });
         return text + layout;
     };
@@ -294,8 +298,8 @@ exports.CoreDirectives = void 0;
 var CoreDirectives = /** @class */ (function () {
     function CoreDirectives() {
     }
-    CoreDirectives.prototype.set = function (literal) {
-        return this.exec("eval(#[0]+\"=\"+$escape(JSON.stringify(#[1])));");
+    CoreDirectives.prototype.set = function () {
+        return this.exec("eval(#[0]+\"=\"+$escape($json(#[1])));");
     };
     CoreDirectives.prototype.define = function () {
         return this.exec("$[#[0]]=#[1];");
@@ -331,7 +335,7 @@ var CoreDirectives = /** @class */ (function () {
         return 'break;/*';
     };
     CoreDirectives.prototype.continue = function (literal) {
-        return "continue;";
+        return "if(" + (literal.text() || literal.length == 0) + "){continue}";
     };
     CoreDirectives.prototype.endswitch = function () {
         return '*/}';
@@ -352,13 +356,27 @@ exports.CoreDirectives = CoreDirectives;
 
 },{}],6:[function(require,module,exports){
 "use strict";
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CoreWax = void 0;
 var core_1 = require("./core");
 var misc_1 = require("./misc");
 var CoreWax = /** @class */ (function () {
     function CoreWax(Wax) {
-        this.directives = new (core_1.CoreDirectives.bind(new misc_1.MiscDirectives));
+        Object.defineProperty(core_1.CoreDirectives, 'prototype', {
+            value: __assign(__assign({}, core_1.CoreDirectives.prototype), misc_1.MiscDirectives.prototype)
+        });
+        this.directives = new core_1.CoreDirectives;
     }
     return CoreWax;
 }());
@@ -384,7 +402,7 @@ var MiscDirectives = /** @class */ (function () {
         return this.write("$escape(#[0]||#[1])");
     };
     MiscDirectives.prototype.json = function (literal) {
-        return this.write("JSON.stringify" + literal);
+        return this.write("$json" + literal);
     };
     MiscDirectives.prototype.js = function () {
         return 'var hjs=out;';

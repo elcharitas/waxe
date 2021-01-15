@@ -6,29 +6,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Strict directive scopes
+- Strict no construction rule
 - Site pages using Waxe
 - Community CODE OF CONDUCT
 - CodeQL security analysis workflow
 - Dependabot to track dependencies
 
 ### Changed
-- Update Contribution guide
+- Updated debug handler
+- Updated Contribution guide
 
 ## [0.0.6] (2021-01-13)
 ### Changed
-- Patch up the parser
-- Fix more [tslint][2] issues
+- Patched up the parser
+- Fixed more [tslint][2] issues
 
 ## [0.0.5] (2021-01-13)
 ### Changed
-- Change version specific links
+- Changed version specific links
 - Fixed Function binding strategy
 - Addressed and fixed tslint issues on [code climate][2]
 
 ## [0.0.4] (2021-01-12)
 ### Changed
 - Fixed [vercel app][1] build issues
-- Add patches for Travis CI
+- Added patches for Travis CI
 
 ## [0.0.3] (2021-01-12)
 ### Added

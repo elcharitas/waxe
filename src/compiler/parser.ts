@@ -53,7 +53,7 @@ export function traverseNode(walker: WaxWalker, tagOpts: WaxTagOpts): string {
         node: WaxNode = null;
     if (node = walker.parser.getTag(tagOpts)) {
         node.write = (value: WaxLiteral) => `${out}+=${node.exec(value)}`;
-        node.exec = (value: WaxLiteral) => parseString(value, argLiteral);
+        node.exec = (value: WaxLiteral) => parseString(value, argLiteral, true);
         result = node.descriptor.call(node, argLiteral);
     }
     else if (walker.jsTags.indexOf(tag) > -1) {
@@ -65,7 +65,7 @@ export function traverseNode(walker: WaxWalker, tagOpts: WaxTagOpts): string {
     return result;
 }
 
-export function parseString(literal: WaxLiteral, argLiteral?: WaxLiteral): string {
+export function parseString(literal: WaxLiteral, argLiteral?: WaxLiteral, createScope?: boolean): string {
     const list: string[] = literal.split('');
     let inString: string = null;
 
@@ -90,13 +90,16 @@ export function parseString(literal: WaxLiteral, argLiteral?: WaxLiteral): strin
                 char = hold.replace('&gt', '>').replace('&lt', '<');
             }
         }
-        else if(!inString && argLiteral && char == '#' && nextChar == '[') {
-            char = `[${argLiteral.text()}]`;
+        else if(!inString && char == '#' && nextChar == '[') {
+            char = 'arguments';
         }
         
         list[index] = char;
     });
     
+    if(createScope == true){
+        return `new Function(${JSON.stringify('return '+list.join(''))}).apply(this,[${argLiteral ? argLiteral.text() : ''}]);`
+    }
     return list.join('');
 }
 

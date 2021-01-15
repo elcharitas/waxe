@@ -1,9 +1,10 @@
+
 export class CoreDirectives {
 
     [name: string]: WaxDescriptor;
     
-    public set(literal: WaxLiteral): string {
-        return this.exec(`eval(#[0]+"="+$escape(JSON.stringify(#[1])));`);
+    public set(this: WaxNode): string {
+        return this.exec(`eval(#[0]+"="+$escape($json(#[1])));`);
     }
     
     public define(this: WaxNode): string {
@@ -51,7 +52,7 @@ export class CoreDirectives {
     }
     
     public continue(literal: WaxLiteral){
-        return `continue;`;
+        return `if(${literal.text()||literal.length==0}){continue}`;
     }
 
     public endswitch(): string {

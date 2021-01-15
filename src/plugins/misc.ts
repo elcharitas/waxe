@@ -19,7 +19,7 @@ export class MiscDirectives {
     }
     
     public json(this: WaxNode, literal: WaxLiteral): string {
-        return this.write(`JSON.stringify${literal}`);
+        return this.write(`$json${literal}`);
     }
     
     public js(): string {

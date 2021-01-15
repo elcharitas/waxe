@@ -6,7 +6,11 @@ export class CoreWax implements WaxPlugin {
     public directives: WaxPlugin['directives'];
 
     public constructor(Wax: Wax) {
+        
+        Object.defineProperty(CoreDirectives, 'prototype', {
+            value: { ...CoreDirectives.prototype, ...MiscDirectives.prototype }
+        })
 
-        this.directives = new (CoreDirectives.bind(new MiscDirectives));
+        this.directives = new CoreDirectives;
     }
 }

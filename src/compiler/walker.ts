@@ -45,7 +45,7 @@ export default class Walker implements WaxWalker {
                 layout = `+this.template(${argLiteral.arg(0)})`;
                 return text = text.replace(rawBlock, '');
             }
-            text = text.replace(rawBlock, `";${traverseNode(this, { tag, argLiteral, block, position, configs, context: configs.context })};\n${out}+="`);
+            text = text.replace(rawBlock, `";${traverseNode(this, { tag, argLiteral, block, position, configs, context: configs.context })}\n${out}+="`);
         });
         return text + layout;
     }
