@@ -7,7 +7,7 @@
                         <h4>{{title}}</h4>
                         <ul class="tsd-index-list">
                             {{#each children}}
-                                <li class="{{cssClasses}}"><a href="{{relativeURL url}}" class="tsd-kind-icon">{{#if name}}{{{wbr name}}}{{else}}<em>{{{wbr kindString}}}</em>{{/if}}</a></li>
+                                <li class="{{cssClasses}}"><a href="{{buildURL url}}" class="tsd-kind-icon">{{#if name}}{{{wbr name}}}{{else}}<em>{{{wbr kindString}}}</em>{{/if}}</a></li>
                             {{/each}}
                         </ul>
                     </section>
@@ -26,7 +26,7 @@
                             {{#each categories}}
                                 <ul class="tsd-index-list">
                                     {{#each children}}
-                                        <li class="{{cssClasses}}"><a href="{{relativeURL url}}" class="tsd-kind-icon">{{#if name}}{{{wbr name}}}{{else}}<em>{{{wbr kindString}}}</em>{{/if}}</a></li>
+                                        <li class="{{cssClasses}}"><a href="{{buildURL url}}" class="tsd-kind-icon">{{#if name}}{{{wbr name}}}{{else}}<em>{{{wbr kindString}}}</em>{{/if}}</a></li>
                                     {{/each}}
                                 </ul>
                             {{/each}}
@@ -34,7 +34,7 @@
                             <h4>{{title}}</h3>
                             <ul class="tsd-index-list">
                                 {{#each children}}
-                                    <li class="{{cssClasses}}"><a href="{{relativeURL url}}" class="tsd-kind-icon">{{#if name}}{{{wbr name}}}{{else}}<em>{{{wbr kindString}}}</em>{{/if}}</a></li>
+                                    <li class="{{cssClasses}}"><a href="{{buildURL url}}" class="tsd-kind-icon">{{#if name}}{{{wbr name}}}{{else}}<em>{{{wbr kindString}}}</em>{{/if}}</a></li>
                                 {{/each}}
                             </ul>
                         {{/if}}

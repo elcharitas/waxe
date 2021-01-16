@@ -33,10 +33,7 @@ function conflictProp(context, props) {
     });
 }
 exports.conflictProp = conflictProp;
-var WaxTemplate = function (context) {
-    if (context === void 0) { context = {}; }
-    return null;
-};
+var WaxTemplate = function (context) { return ''; };
 exports.WaxTemplate = WaxTemplate;
 var WaxDelimiter = {
     blockSyntax: '@(\\w+)(\\([^@]+\\))?',

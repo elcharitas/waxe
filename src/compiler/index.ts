@@ -31,7 +31,7 @@ function conflictProp(context: any, props: string[] = Object.keys(context)): voi
     });
 }
 
-const WaxTemplate: WaxTemplate = (context: WaxContext = {}) => null;
+const WaxTemplate: WaxTemplate = (context?: WaxContext) => '';
 
 const WaxDelimiter: WaxDelimiter = {
     blockSyntax: '@(\\w+)(\\([^@]+\\))?',
