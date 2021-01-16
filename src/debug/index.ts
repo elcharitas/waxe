@@ -1,10 +1,20 @@
+/** Some common Debug Nesaages */
 const debugMessages: string[] = [
-    "%1 should be %2 as %3",
-    "%1 should be %3 as a %2"
+    '%1 should be %2 as %3',
+    '%1 should be %3 as a %2'
 ];
 
+/** We'd only be throwing TypeErrors */
 const debugStack: typeof Error = TypeError;
 
+/**
+ * Generate Debug args by debugging the type of the constraint
+ *
+ * @param args - default args
+ * @param constraint - The variable to test
+ * @param expected - The value to test with
+ * @returns - An array of arguments generated
+ */
 function debugType(args: string[], constraint: any, expected: any): string[] {
     const expectedType: string = typeof expected;
     
@@ -14,7 +24,8 @@ function debugType(args: string[], constraint: any, expected: any): string[] {
     
     if(typeof constraint === 'undefined' && expectedType === 'object'){
         args.push('initialized');
-    } else if(expectedType !== 'object' || expected === null && constraint !== null){
+    }
+    else if(expectedType !== 'object' || (expected === null && constraint !== null)){
         args.push(expectedType);
         args.push('declared');
     }
@@ -24,6 +35,15 @@ function debugType(args: string[], constraint: any, expected: any): string[] {
 
 export function debugProp(object: any, property: string): boolean {
     return Object.prototype.hasOwnProperty.call(object, property);
+}
+
+export function extendProp(object: any, constraint: any): any {
+
+    Object.defineProperty(object, 'prototype', {
+        value: { ...object.prototype, ...(constraint.prototype||constraint) }
+    });
+    
+    return object;
 }
 
 export function dbg(check: any, constraint?: any, expected: any = {}): void {

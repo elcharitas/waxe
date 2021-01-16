@@ -1,7 +1,7 @@
-import { dbg } from '../debug';
 import { out, traverseNode, parseString } from './parser';
 
-export default class Walker implements WaxWalker {
+/** Walker is used to walk a traversed source */
+export class Walker implements WaxWalker {
     
     public directives: RegExpMatchArray;
     
@@ -15,19 +15,11 @@ export default class Walker implements WaxWalker {
     
     public endPrefix: string;
     
-    public jsTags: string[];
+    public jsTags: string[] = ['for', 'if', 'while', 'switch'];
     
     public parser: Wax;
     
-    public constructor(parser: Wax, root: WaxTreeRoot = {}){
-        dbg('Walker', this);
-        this.directives = root.directives;
-        this.argList = root.argList;
-        this.blockSyntax = root.blockSyntax;
-        this.tagName = root.tagName;
-        this.text = root.text;
-        this.endPrefix = root.endPrefix;
-        this.jsTags = ['for', 'if', 'while', 'switch'];
+    public constructor(parser: Wax){
         this.parser = parser;
     }
     
@@ -41,7 +33,7 @@ export default class Walker implements WaxWalker {
                 } = block.match(this.blockSyntax),
                 configs = this.parser.getConfigs(),
                 argLiteral: WaxLiteral = this.toArgs(argList);
-            if(tag == "extends" && position == 0){
+            if(tag === "extends" && position === 0){
                 layout = `+this.template(${argLiteral.arg(0)})`;
                 return text = text.replace(rawBlock, '');
             }

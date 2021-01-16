@@ -1,5 +1,6 @@
 import { WaxTemplate } from '.';
-import Walker from './walker';
+import { extendProp } from '../debug';
+import { Walker } from './walker';
 
 interface Function {
     bind(this: Function, thisArg: any, ...argArray: any[]): WaxTemplate;
@@ -24,7 +25,7 @@ function bind(source: string): Function {
 function transpile(parser: Wax, source: string, config: WaxConfig): Function {
     const treeRoot: WaxTreeRoot = traverse(source, config.delimiter);
     
-    let text = new Walker(parser, treeRoot).walk();
+    let text = new (extendProp(Walker, treeRoot))(parser).walk();
     
     if(config.strip === true){
         text = text.replace(/\\n\s+/g, '');
@@ -71,33 +72,33 @@ export function parseString(literal: WaxLiteral, argLiteral?: WaxLiteral, create
 
     list.forEach((char: string, index: number) => {
         const nextChar: string = list[index + 1];
-        if (char != inString && (inString == '"' || inString == '\'')) {
+        if (char != inString && (inString === '"' || inString === '\'')) {
             inString = char;
         }
-        else if(inString == char) {
+        else if(inString === char) {
             inString = null;
         }
-        else if(!inString && char == '$' && nextChar != '[') {
+        else if(!inString && char === '$' && nextChar != '[') {
             char = 'this.';
         }
-        else if (!inString && char == '$' && nextChar == '[') {
+        else if (!inString && char === '$' && nextChar === '[') {
             char = 'this';
         }
-        else if(!inString && char == ';') {
+        else if(!inString && char === ';') {
             const hold: string = list[index - 3] + list[index - 2] + list[index - 1];
             if(hold.match(/^&(g|l)t$/)){
                 list[index - 1] = list[index - 2] = list[index - 3] = '';
                 char = hold.replace('&gt', '>').replace('&lt', '<');
             }
         }
-        else if(!inString && char == '#' && nextChar == '[') {
+        else if(!inString && char === '#' && nextChar === '[') {
             char = 'arguments';
         }
         
         list[index] = char;
     });
     
-    if(createScope == true){
+    if(createScope === true){
         return `new Function(${JSON.stringify('return '+list.join(''))}).apply(this,[${argLiteral ? argLiteral.text() : ''}]);`
     }
     return list.join('');

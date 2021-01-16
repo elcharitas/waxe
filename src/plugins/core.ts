@@ -47,11 +47,11 @@ export class CoreDirectives {
         return `*/case ${literal}:`;
     }
 
-    public break(literal: WaxLiteral){
+    public break(literal: WaxLiteral): string {
         return 'break;/*';
     }
     
-    public continue(literal: WaxLiteral){
+    public continue(literal: WaxLiteral): string {
         return `if(${literal.text()||literal.length==0}){continue}`;
     }
 

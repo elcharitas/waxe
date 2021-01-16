@@ -394,6 +394,22 @@ declare interface Wax {
      */
     template(name: string, source?: string): WaxTemplate;
     /**
+     * Resolves a DOM's content
+     *
+     * **N/B**: Use this only in browsers
+     * 
+     * **Example**
+     * ```js
+     * Wax.resolve('.waxe');
+     * //renders all elements with class waxe
+     * ```
+     * 
+     * @param selectors - CSS-like query selectors to use
+     * @param context - The context to apply
+     * @param visible - Whether or not to make elements visible
+     */
+    resolve(selectors: string, context: WaxContext, visible: boolean): void;
+    /**
      * Gets the {@link WaxConfig | configuration options}
      */
     getConfigs(): WaxConfig;
@@ -408,6 +424,19 @@ declare interface Wax {
      * @returns - The directive node
      */
     getTag(tagOpts?: WaxTagOpts): WaxNode;
+    /**
+     * Add a Plugin's directives using its constructor
+     *
+     * **Example**
+     * ```js
+     * import SomePlugin from "some-plugin";
+     * //register the plugin seamlessly
+     * Wax.addPlugin(SomePlugin);
+     * ```
+     * 
+     * @param classLabel - The constructor of the plugin
+     */
+    addPlugin(classLabel: WaxPluginConstruct): void;
 }
 
 /**

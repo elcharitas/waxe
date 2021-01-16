@@ -74,7 +74,7 @@ const WaxConfig: WaxConfig = {
         },
         template(name: string, context: WaxContext = {}, safe: boolean = false): string {
             const template: WaxTemplate = require("../waxe").template(name);
-            if(safe == false && !template) {
+            if(safe === false && !template) {
                 dbg(template, WaxTemplate);
             }
             return (template || WaxTemplate)(context);

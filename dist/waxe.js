@@ -85,7 +85,7 @@ var WaxConfig = {
             if (context === void 0) { context = {}; }
             if (safe === void 0) { safe = false; }
             var template = require("../waxe").template(name);
-            if (safe == false && !template) {
+            if (safe === false && !template) {
                 debug_1.dbg(template, WaxTemplate);
             }
             return (template || WaxTemplate)(context);
@@ -99,13 +99,11 @@ conflictProp(WaxConfig.context);
 
 },{"../debug":4,"../waxe":8}],2:[function(require,module,exports){
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.parseTemplate = exports.parseString = exports.traverseNode = exports.out = void 0;
 var _1 = require(".");
-var walker_1 = __importDefault(require("./walker"));
+var debug_1 = require("../debug");
+var walker_1 = require("./walker");
 exports.out = 'out';
 function renameTemplate(name, sourceFn, parser) {
     return new Function('call', 'return function ' + name.replace(/[\/\.\-]+/g, '') + '(){return call(this,arguments)}')(Function.apply.bind(sourceFn.bind(parser.getConfigs().context, '')));
@@ -120,7 +118,7 @@ function bind(source) {
 }
 function transpile(parser, source, config) {
     var treeRoot = traverse(source, config.delimiter);
-    var text = new walker_1.default(parser, treeRoot).walk();
+    var text = new (debug_1.extendProp(walker_1.Walker, treeRoot))(parser).walk();
     if (config.strip === true) {
         text = text.replace(/\\n\s+/g, '');
     }
@@ -159,31 +157,31 @@ function parseString(literal, argLiteral, createScope) {
     var inString = null;
     list.forEach(function (char, index) {
         var nextChar = list[index + 1];
-        if (char != inString && (inString == '"' || inString == '\'')) {
+        if (char != inString && (inString === '"' || inString === '\'')) {
             inString = char;
         }
-        else if (inString == char) {
+        else if (inString === char) {
             inString = null;
         }
-        else if (!inString && char == '$' && nextChar != '[') {
+        else if (!inString && char === '$' && nextChar != '[') {
             char = 'this.';
         }
-        else if (!inString && char == '$' && nextChar == '[') {
+        else if (!inString && char === '$' && nextChar === '[') {
             char = 'this';
         }
-        else if (!inString && char == ';') {
+        else if (!inString && char === ';') {
             var hold = list[index - 3] + list[index - 2] + list[index - 1];
             if (hold.match(/^&(g|l)t$/)) {
                 list[index - 1] = list[index - 2] = list[index - 3] = '';
                 char = hold.replace('&gt', '>').replace('&lt', '<');
             }
         }
-        else if (!inString && char == '#' && nextChar == '[') {
+        else if (!inString && char === '#' && nextChar === '[') {
             char = 'arguments';
         }
         list[index] = char;
     });
-    if (createScope == true) {
+    if (createScope === true) {
         return "new Function(" + JSON.stringify('return ' + list.join('')) + ").apply(this,[" + (argLiteral ? argLiteral.text() : '') + "]);";
     }
     return list.join('');
@@ -197,21 +195,14 @@ function parseTemplate(name, source, parser) {
 }
 exports.parseTemplate = parseTemplate;
 
-},{".":1,"./walker":3}],3:[function(require,module,exports){
+},{".":1,"../debug":4,"./walker":3}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var debug_1 = require("../debug");
+exports.Walker = void 0;
 var parser_1 = require("./parser");
+/** Walker is used to walk a traversed source */
 var Walker = /** @class */ (function () {
-    function Walker(parser, root) {
-        if (root === void 0) { root = {}; }
-        debug_1.dbg('Walker', this);
-        this.directives = root.directives;
-        this.argList = root.argList;
-        this.blockSyntax = root.blockSyntax;
-        this.tagName = root.tagName;
-        this.text = root.text;
-        this.endPrefix = root.endPrefix;
+    function Walker(parser) {
         this.jsTags = ['for', 'if', 'while', 'switch'];
         this.parser = parser;
     }
@@ -222,7 +213,7 @@ var Walker = /** @class */ (function () {
         if (layout === void 0) { layout = ''; }
         (_a = this.directives) === null || _a === void 0 ? void 0 : _a.forEach(function (rawBlock, position) {
             var block = JSON.parse("\"" + rawBlock + "\""), _a = block.match(_this.blockSyntax), _b = _this.tagName, tag = _a[_b], _c = _this.argList, _d = _a[_c], argList = _d === void 0 ? '' : _d, configs = _this.parser.getConfigs(), argLiteral = _this.toArgs(argList);
-            if (tag == "extends" && position == 0) {
+            if (tag === "extends" && position === 0) {
                 layout = "+this.template(" + argLiteral.arg(0) + ")";
                 return text = text.replace(rawBlock, '');
             }
@@ -250,17 +241,38 @@ var Walker = /** @class */ (function () {
     };
     return Walker;
 }());
-exports.default = Walker;
+exports.Walker = Walker;
 
-},{"../debug":4,"./parser":2}],4:[function(require,module,exports){
+},{"./parser":2}],4:[function(require,module,exports){
 "use strict";
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.dbg = exports.debugProp = void 0;
+exports.dbg = exports.extendProp = exports.debugProp = void 0;
+/** Some common Debug Nesaages */
 var debugMessages = [
-    "%1 should be %2 as %3",
-    "%1 should be %3 as a %2"
+    '%1 should be %2 as %3',
+    '%1 should be %3 as a %2'
 ];
+/** We'd only be throwing TypeErrors */
 var debugStack = TypeError;
+/**
+ * Generate Debug args by debugging the type of the constraint
+ *
+ * @param args - default args
+ * @param constraint - The variable to test
+ * @param expected - The value to test with
+ * @returns - An array of arguments generated
+ */
 function debugType(args, constraint, expected) {
     var expectedType = typeof expected;
     if (typeof constraint !== expectedType) {
@@ -269,7 +281,7 @@ function debugType(args, constraint, expected) {
     if (typeof constraint === 'undefined' && expectedType === 'object') {
         args.push('initialized');
     }
-    else if (expectedType !== 'object' || expected === null && constraint !== null) {
+    else if (expectedType !== 'object' || (expected === null && constraint !== null)) {
         args.push(expectedType);
         args.push('declared');
     }
@@ -279,6 +291,13 @@ function debugProp(object, property) {
     return Object.prototype.hasOwnProperty.call(object, property);
 }
 exports.debugProp = debugProp;
+function extendProp(object, constraint) {
+    Object.defineProperty(object, 'prototype', {
+        value: __assign(__assign({}, object.prototype), (constraint.prototype || constraint))
+    });
+    return object;
+}
+exports.extendProp = extendProp;
 function dbg(check, constraint, expected) {
     if (expected === void 0) { expected = {}; }
     var args = debugType([check], constraint, expected), dbgFor = '', _a = debugMessages, _b = args.length - 2, _c = _a[_b], debugInfo = _c === void 0 ? 'Unknown' : _c;
@@ -356,33 +375,20 @@ exports.CoreDirectives = CoreDirectives;
 
 },{}],6:[function(require,module,exports){
 "use strict";
-var __assign = (this && this.__assign) || function () {
-    __assign = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign.apply(this, arguments);
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CoreWax = void 0;
+var debug_1 = require("../debug");
 var core_1 = require("./core");
 var misc_1 = require("./misc");
 var CoreWax = /** @class */ (function () {
     function CoreWax(Wax) {
-        Object.defineProperty(core_1.CoreDirectives, 'prototype', {
-            value: __assign(__assign({}, core_1.CoreDirectives.prototype), misc_1.MiscDirectives.prototype)
-        });
-        this.directives = new core_1.CoreDirectives;
+        this.directives = new (debug_1.extendProp(core_1.CoreDirectives, misc_1.MiscDirectives.prototype));
     }
     return CoreWax;
 }());
 exports.CoreWax = CoreWax;
 
-},{"./core":5,"./misc":7}],7:[function(require,module,exports){
+},{"../debug":4,"./core":5,"./misc":7}],7:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MiscDirectives = void 0;
@@ -413,7 +419,6 @@ var MiscDirectives = /** @class */ (function () {
     return MiscDirectives;
 }());
 exports.MiscDirectives = MiscDirectives;
-;
 
 },{}],8:[function(require,module,exports){
 "use strict";
@@ -434,6 +439,11 @@ var compiler_1 = require("./compiler");
 var parser_1 = require("./compiler/parser");
 var plugins_1 = require("./plugins");
 module.exports = (_a = /** @class */ (function () {
+        /**
+         * This creates a singleton of Wax
+         *
+         * @throws TypeErrors - When called directly or attempt to reinstantiate
+         */
         function Wax() {
             debug_1.dbg('Wax', this);
             debug_1.dbg('Wax', Wax._core, null);
@@ -441,37 +451,58 @@ module.exports = (_a = /** @class */ (function () {
             this.tags = {};
             this.templates = {};
         }
+        /**
+         * Assigns a value to a variable globally
+         *
+         * **Example**
+         * ```js
+         * Wax.global('monkey', 'Buboo');
+         * ```
+         * Now you can use it in any template
+         * ```waxe
+         * @yield($monkey)
+         * ```
+         * @param name - The Name of new variable
+         * @param value - Value to be assigned
+         * @returns - The assigned value
+         */
         Wax.global = function (name, value) {
             if (value === void 0) { value = null; }
             return this.core.configs.context[name] = value;
         };
+        /**
+         * Create a new directive
+         *
+         * **Example**
+         * ```js
+         * Wax.directive('monkey', function(){
+         *      return 'prompt("I am a monkey!");'
+         * });
+         * ```
+         * Now it can be used in a template
+         * ```waxe
+         * @monkey
+         * ```
+         * @param tagName - The name of the directive
+         * @param descriptor - The directive's descriptor
+         * @returns - The created node for type checks
+         */
         Wax.directive = function (tag, descriptor) {
             return this.core.tags[tag] = { tag: tag, descriptor: descriptor };
         };
-        Wax.setDelimiter = function (delimiter) {
-            return Wax.core.configs.delimiter = __assign(__assign({}, Wax.getDelimiter()), delimiter);
-        };
-        Wax.getConfigs = function () {
-            return Wax.core.configs;
-        };
-        Wax.getDelimiter = function () {
-            return Wax.getConfigs().delimiter;
-        };
-        Wax.getTag = function (tagOpts) {
-            var tagDef = this.core.tags[tagOpts.tag] || null;
-            if (typeof tagDef === 'object' && tagDef !== null) {
-                tagDef = __assign(__assign({}, tagDef), tagOpts);
-            }
-            return tagDef;
-        };
-        Wax.addPlugin = function (classLabel) {
-            var _a = new classLabel(this).directives, directives = _a === void 0 ? {} : _a;
-            for (var tag in directives) {
-                if (typeof directives[tag] === 'function') {
-                    this.directive(tag, directives[tag]);
-                }
-            }
-        };
+        /**
+         * Creates a template using its `name` and `source` text
+         * Can also be used to get a template by using the name only
+         *
+         * **Example**
+         * ```js
+         * var tpl = Wax.template('hello.waxe', '@yield("Hello")');
+         * tpl === Wax.template('hello.waxe') // true
+         * ```
+         * @param name - The name of the template
+         * @param source - The source text for the template
+         * @returns - The resolved {@link WaxTemplate | template function}
+         */
         Wax.template = function (name, source, config) {
             if (config === void 0) { config = this.getConfigs(); }
             if (typeof source === 'string') {
@@ -479,6 +510,21 @@ module.exports = (_a = /** @class */ (function () {
             }
             return this.core.templates[name];
         };
+        /**
+         * Resolves a DOM's content
+         *
+         * **N/B**: Use this only in browsers
+         *
+         * **Example**
+         * ```js
+         * Wax.resolve('.waxe');
+         * //renders all elements with class waxe
+         * ```
+         *
+         * @param selectors - CSS-like query selectors to use
+         * @param context - The context to apply
+         * @param visible - Whether or not to make elements visible
+         */
         Wax.resolve = function (selectors, context, visible) {
             if (context === void 0) { context = {}; }
             if (visible === void 0) { visible = true; }
@@ -507,8 +553,64 @@ module.exports = (_a = /** @class */ (function () {
             enumerable: false,
             configurable: true
         });
+        /**
+         * Sets the {@link WaxDelimiter | delimiter options}
+         *
+         * @returns - The new delimiter
+         */
+        Wax.setDelimiter = function (delimiter) {
+            return Wax.core.configs.delimiter = __assign(__assign({}, Wax.getDelimiter()), delimiter);
+        };
+        /**
+         * Gets the {@link WaxConfig | configuration options}
+         */
+        Wax.getConfigs = function () {
+            return Wax.core.configs;
+        };
+        /**
+         * Gets the current {@link WaxDelimiter | delimiter}
+         */
+        Wax.getDelimiter = function () {
+            return Wax.getConfigs().delimiter;
+        };
+        /**
+         * Get a directive/creates a fake using its options
+         *
+         * @param tagOpts - A convienent match of tag options to search
+         * @returns - The directive node
+         */
+        Wax.getTag = function (tagOpts) {
+            var tagDef = this.core.tags[tagOpts.tag] || null;
+            if (typeof tagDef === 'object' && tagDef !== null) {
+                tagDef = __assign(__assign({}, tagDef), tagOpts);
+            }
+            return tagDef;
+        };
+        /**
+         * Add a Plugin's directives using its constructor
+         *
+         * **Example**
+         * ```js
+         * import SomePlugin from "some-plugin";
+         * //register the plugin seamlessly
+         * Wax.addPlugin(SomePlugin);
+         * ```
+         *
+         * @param classLabel - The constructor of the plugin
+         */
+        Wax.addPlugin = function (classLabel) {
+            var _a = new classLabel(this).directives, directives = _a === void 0 ? {} : _a;
+            for (var tag in directives) {
+                if (typeof directives[tag] === 'function') {
+                    this.directive(tag, directives[tag]);
+                }
+            }
+        };
         return Wax;
     }()),
+    /**
+     * The Wax Instance holder
+     */
     _a._core = null,
     _a);
 

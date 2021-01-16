@@ -29,4 +29,4 @@ export class MiscDirectives {
     public endjs(this: WaxNode): string {
         return this.exec(`hjs=$reverse(out).replace($reverse(hjs),"");out=$reverse($reverse(out).replace(hjs,""));(new Function($reverse(hjs))).bind(this)();delete hjs`);
     }
-};
+}
