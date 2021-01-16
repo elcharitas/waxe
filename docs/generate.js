@@ -4,7 +4,7 @@ const wax = require('../dist/waxe');
 const { resolve } = require('path')
 const glob = require('glob');
 const cwd = process.cwd();
-const srcObj = glob.sync('src/**.waxe', {
+const srcObj = glob.sync('src/**/*.waxe', {
     cwd: module.path
 });
 
@@ -27,8 +27,10 @@ async function main() {
         srcObj.forEach(src => {
             const path = resolve(module.path, src);
             const outPath = src.replace('src', '_dist').replace('waxe', 'html');
-            const tpl = wax.template(src, fs.readFileSync(path).toString());
+            const tpl = wax.template(src.replace('src/', ''), fs.readFileSync(path).toString());
+            try {
             fs.writeFileSync(outPath, tpl.call({}) || '')
+            } catch(e){}
         });
     }
 }
