@@ -48,7 +48,7 @@ export class CoreDirectives {
     }
 
     public break(literal: WaxLiteral): string {
-        return 'break;/*';
+        return literal.length === 0 ? 'break;/*': `if(${literal.text()}){break}`;
     }
     
     public continue(literal: WaxLiteral): string {

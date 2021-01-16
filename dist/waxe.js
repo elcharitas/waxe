@@ -33,10 +33,10 @@ function conflictProp(context, props) {
     });
 }
 exports.conflictProp = conflictProp;
-var WaxTemplate = function (context) { return ''; };
+var WaxTemplate = function () { return ''; };
 exports.WaxTemplate = WaxTemplate;
 var WaxDelimiter = {
-    blockSyntax: '@(\\w+)(\\([^@]+\\))?',
+    blockSyntax: /@(\w+)(\([^@]+\))?/,
     tagName: 1,
     argList: 2,
     endPrefix: 'end'
@@ -51,17 +51,8 @@ var WaxConfig = {
     context: {
         startTime: Date.now(),
         json: JSON.stringify,
-        now: function () {
-            return Date.now();
-        },
-        escape: function (text, strict) {
-            if (strict === void 0) { strict = false; }
-            text = encodeHTML(text);
-            if (strict === true) {
-                text = (escape || String)(text);
-            }
-            return text;
-        },
+        escape: encodeHTML,
+        now: Date.now,
         merge: function (args) {
             var _this = this;
             if (args === void 0) { args = []; }
@@ -103,14 +94,16 @@ var debug_1 = require("../debug");
 var walker_1 = require("./walker");
 exports.out = 'out';
 function renameTemplate(name, sourceFn, parser) {
-    return new Function('call', 'return function ' + name.replace(/[\/\.\-]+/g, '') + '(){return call(this,arguments)}')(Function.apply.bind(sourceFn.bind(parser.getConfigs().context, '')));
+    return new Function('call', 'return function ' + name.replace(/\/-\./g, '') + '(){return call(this,arguments)}')(Function.apply.bind(sourceFn.bind(parser.getConfigs().context, '')));
 }
 function bind(source) {
     var template = _1.WaxTemplate;
     try {
         template = new Function(exports.out, "this.merge(arguments);" + exports.out + "+=" + source + ";return " + exports.out);
     }
-    catch (e) { }
+    catch (e) {
+        throw 'Error occured while parsing template';
+    }
     return template;
 }
 function transpile(parser, source, config) {
@@ -122,7 +115,7 @@ function transpile(parser, source, config) {
     return bind(text);
 }
 function traverse(source, delimiter) {
-    var argList = delimiter.argList, blockSyntax = delimiter.blockSyntax, tagName = delimiter.tagName, endPrefix = delimiter.endPrefix, text = JSON.stringify(source), directives = text.match(new RegExp("(" + blockSyntax + ")", 'g'));
+    var argList = delimiter.argList, blockSyntax = delimiter.blockSyntax, tagName = delimiter.tagName, endPrefix = delimiter.endPrefix, text = JSON.stringify(source), directives = text.match(new RegExp(blockSyntax, 'g'));
     return {
         text: text,
         directives: directives,
@@ -133,9 +126,9 @@ function traverse(source, delimiter) {
     };
 }
 function traverseNode(walker, tagOpts) {
-    var tag = tagOpts.tag, argLiteral = tagOpts.argLiteral;
-    var result = '', node = null;
-    if (node = walker.parser.getTag(tagOpts)) {
+    var tag = tagOpts.tag, argLiteral = tagOpts.argLiteral, node = walker.parser.getTag(tagOpts);
+    var result = '';
+    if (null !== node) {
         node.write = function (value) { return exports.out + "+=" + node.exec(value); };
         node.exec = function (value) { return parseString(value, argLiteral, true); };
         result = node.descriptor.call(node, argLiteral);
@@ -271,9 +264,10 @@ var debugStack = TypeError;
  * @returns - An array of arguments generated
  */
 function debugType(args, constraint, expected) {
+    var _a;
     var expectedType = typeof expected;
     if (typeof constraint !== expectedType) {
-        args.push((expected === null || expected === void 0 ? void 0 : expected.name) || expectedType);
+        args.push(((_a = expected) === null || _a === void 0 ? void 0 : _a.name) || expectedType);
     }
     if (typeof constraint === 'undefined' && expectedType === 'object') {
         args.push('initialized');
@@ -297,7 +291,8 @@ function extendProp(object, constraint) {
 exports.extendProp = extendProp;
 function dbg(check, constraint, expected) {
     if (expected === void 0) { expected = {}; }
-    var args = debugType([check], constraint, expected), dbgFor = '', _a = debugMessages, _b = args.length - 2, _c = _a[_b], debugInfo = _c === void 0 ? 'Unknown' : _c;
+    var args = debugType([check], constraint, expected);
+    var _a = debugMessages, _b = args.length - 2, _c = _a[_b], debugInfo = _c === void 0 ? 'Unknown' : _c;
     args.forEach(function (arg, index) {
         debugInfo = debugInfo.replace("%" + (index + 1), arg);
     });
@@ -348,7 +343,7 @@ var CoreDirectives = /** @class */ (function () {
         return "*/case " + literal + ":";
     };
     CoreDirectives.prototype.break = function (literal) {
-        return 'break;/*';
+        return literal.length === 0 ? 'break;/*' : "if(" + literal.text() + "){break}";
     };
     CoreDirectives.prototype.continue = function (literal) {
         return "if(" + (literal.text() || literal.length == 0) + "){continue}";
@@ -377,9 +372,16 @@ exports.CoreWax = void 0;
 var debug_1 = require("../debug");
 var core_1 = require("./core");
 var misc_1 = require("./misc");
+/** The default plugin of Waxe */
 var CoreWax = /** @class */ (function () {
+    /**
+     * Define directives and add `$core` global
+     *
+     * @param Wax - The Wax Instance
+     */
     function CoreWax(Wax) {
         this.directives = new (debug_1.extendProp(core_1.CoreDirectives, misc_1.MiscDirectives.prototype));
+        Wax.global('$core', this.directives);
     }
     return CoreWax;
 }());
@@ -500,8 +502,7 @@ module.exports = (_a = /** @class */ (function () {
          * @param source - The source text for the template
          * @returns - The resolved {@link WaxTemplate | template function}
          */
-        Wax.template = function (name, source, config) {
-            if (config === void 0) { config = this.getConfigs(); }
+        Wax.template = function (name, source) {
             if (typeof source === 'string') {
                 this.core.templates[name] = parser_1.parseTemplate(name, source, Wax);
             }
@@ -532,11 +533,10 @@ module.exports = (_a = /** @class */ (function () {
                         element.hidden = !visible;
                 });
             }
-            ;
         };
         Object.defineProperty(Wax, "core", {
             /**
-             * Gets or Creates the Wax instance
+             * Gets or Creates the Wax instance, registering the Core plugin once.
              *
              * @returns The created Wax Instance
              */

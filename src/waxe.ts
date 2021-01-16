@@ -54,7 +54,7 @@ export = class Wax implements Wax {
      * @param value - Value to be assigned
      * @returns - The assigned value
      */
-    public static global(name: string, value: any = null): any {
+    public static global(name: string, value: NumStr = null): NumStr {
         return this.core.configs.context[name] = value;
     }
 
@@ -92,7 +92,7 @@ export = class Wax implements Wax {
      * @param source - The source text for the template
      * @returns - The resolved {@link WaxTemplate | template function}
      */
-    public static template(name: string, source: string, config: WaxConfig = this.getConfigs()): WaxTemplate
+    public static template(name: string, source?: string): WaxTemplate
     {
         if(typeof source === 'string') {
             this.core.templates[name] = parseTemplate(name, source, Wax);
@@ -116,22 +116,22 @@ export = class Wax implements Wax {
      * @param context - The context to apply
      * @param visible - Whether or not to make elements visible
      */
-    public static resolve(selectors: string, context: WaxContext = {}, visible: boolean = true): void
+    public static resolve(selectors: string, context: WaxContext = {}, visible = true): void
     {
         if(typeof document !== 'undefined'){
-            document.querySelectorAll(selectors).forEach((element: any) => {
-                element.innerHTML = element.value = Wax.template(element.id, element.value||element.innerHTML)(context);
+            document.querySelectorAll(selectors).forEach((element: HTMLInputElement | Element) => {
+                element.innerHTML = (element as HTMLInputElement).value = Wax.template(element.id, (element as HTMLInputElement).value||element.innerHTML)(context);
                 if('hidden' in element) element.hidden = !visible;
             });
-        };
+        }
     }
 
     /**
-     * Gets or Creates the Wax instance
+     * Gets or Creates the Wax instance, registering the Core plugin once.
      *
      * @returns The created Wax Instance
      */
-    public static get core(){
+    public static get core(): Wax {
         if(!(this._core instanceof Wax)){
             this._core = new Wax;
             Wax.addPlugin(CoreWax);
@@ -188,7 +188,7 @@ export = class Wax implements Wax {
      * 
      * @param classLabel - The constructor of the plugin
      */
-    public static addPlugin(classLabel: WaxPluginConstruct){
+    public static addPlugin(classLabel: WaxPluginConstruct): void {
         const { directives = {} } = new classLabel(this);
         for (const tag in directives) {
             if(typeof directives[tag] === 'function') {

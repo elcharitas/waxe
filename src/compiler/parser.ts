@@ -2,27 +2,25 @@ import { WaxTemplate } from '.';
 import { extendProp } from '../debug';
 import { Walker } from './walker';
 
-interface Function {
-    bind(this: Function, thisArg: any, ...argArray: any[]): WaxTemplate;
+export const out = 'out';
+
+function renameTemplate(name: string, sourceFn: WaxPresenter, parser: Wax): WaxTemplate {
+    return new Function('call', 'return function ' + name.replace(/\/-\./g, '') + '(){return call(this,arguments)}')(Function.apply.bind(sourceFn.bind(parser.getConfigs().context, '')));
 }
 
-export const out: string = 'out';
-
-function renameTemplate(name: string, sourceFn: Function, parser: Wax): WaxTemplate {
-    return new Function('call', 'return function ' + name.replace(/[\/\.\-]+/g,'') + '(){return call(this,arguments)}')(Function.apply.bind(sourceFn.bind(parser.getConfigs().context, '')));
-}
-
-function bind(source: string): Function {
-    let template: Function = WaxTemplate;
+function bind(source: string): WaxPresenter {
+    let template: WaxPresenter = WaxTemplate;
 
     try {
         template = new Function(out, `this.merge(arguments);${out}+=${source};return ${out}`);
-    } catch (e){}
+    } catch (e){
+        throw 'Error occured while parsing template';
+    }
 
     return template;
 }
 
-function transpile(parser: Wax, source: string, config: WaxConfig): Function {
+function transpile(parser: Wax, source: string, config: WaxConfig): WaxPresenter {
     const treeRoot: WaxTreeRoot = traverse(source, config.delimiter);
     
     let text = new (extendProp(Walker, treeRoot))(parser).walk();
@@ -37,7 +35,7 @@ function transpile(parser: Wax, source: string, config: WaxConfig): Function {
 function traverse(source: string, delimiter: WaxDelimiter): WaxTreeRoot {
     const { argList, blockSyntax, tagName, endPrefix } = delimiter,
         text: string = JSON.stringify(source),
-        directives: RegExpMatchArray = text.match(new RegExp(`(${blockSyntax})`, 'g'));
+        directives: RegExpMatchArray = text.match(new RegExp(blockSyntax, 'g'));
     return {
         text,
         directives,
@@ -49,10 +47,11 @@ function traverse(source: string, delimiter: WaxDelimiter): WaxTreeRoot {
 }
 
 export function traverseNode(walker: WaxWalker, tagOpts: WaxTagOpts): string {
-    const { tag, argLiteral } = tagOpts;
-    let result: string = '',
-        node: WaxNode = null;
-    if (node = walker.parser.getTag(tagOpts)) {
+    const { tag, argLiteral } = tagOpts,
+        node: WaxNode = walker.parser.getTag(tagOpts);
+    let result = '';
+    
+    if (null !== node) {
         node.write = (value: WaxLiteral) => `${out}+=${node.exec(value)}`;
         node.exec = (value: WaxLiteral) => parseString(value, argLiteral, true);
         result = node.descriptor.call(node, argLiteral);
@@ -99,12 +98,12 @@ export function parseString(literal: WaxLiteral, argLiteral?: WaxLiteral, create
     });
     
     if(createScope === true){
-        return `new Function(${JSON.stringify('return '+list.join(''))}).apply(this,[${argLiteral ? argLiteral.text() : ''}]);`
+        return `new Function(${JSON.stringify('return '+list.join(''))}).apply(this,[${argLiteral ? argLiteral.text() : ''}]);`;
     }
     return list.join('');
 }
 
-export function parseTemplate(name: string = 'waxe-' + Date.now(), source: string = '', parser: Wax = null): WaxTemplate {
+export function parseTemplate(name: string = 'waxe-' + Date.now(), source = '', parser: Wax = null): WaxTemplate {
     return renameTemplate(name,
         transpile(parser, source, parser.getConfigs()),
         parser

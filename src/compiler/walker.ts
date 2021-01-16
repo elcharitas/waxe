@@ -23,7 +23,7 @@ export class Walker implements WaxWalker {
         this.parser = parser;
     }
     
-    public walk(text: string = this.text, layout: string = ''): string
+    public walk(text = this.text, layout = ''): string
     {
         this.directives?.forEach((rawBlock: string, position: number) => {
             const block = JSON.parse(`"${rawBlock}"`),
@@ -42,7 +42,7 @@ export class Walker implements WaxWalker {
         return text + layout;
     }
     
-    public isBlockEnd(realTag: string='', tag: string = realTag.replace(this.endPrefix,'')): boolean {
+    public isBlockEnd(realTag = '', tag = realTag.replace(this.endPrefix, '')): boolean {
         return realTag.indexOf(this.endPrefix) === 0 && (this.jsTags.indexOf(tag) > -1 || this.parser.getTag({tag}) !== null);
     }
     
@@ -51,15 +51,15 @@ export class Walker implements WaxWalker {
         
         argLiteral.arg = function(key: number): string {
             return `[${argLiteral.text()}][${key}]`;
-        }
+        };
         
         argLiteral.parse = function(): string {
             return parseString(argLiteral);
-        }
+        };
         
         argLiteral.text = function(): string {
             return argLiteral.parse().replace(/^\(([\s\S]*)\)$/, '$1');
-        }
+        };
         
         return argLiteral;
     }

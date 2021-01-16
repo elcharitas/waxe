@@ -10,27 +10,27 @@ const { 2: action, 3: path } = process.argv,
         version: '\tDisplays version info',
         help: '[topic]\tShows this help or help [topic]'
     },
-    parse = (src: string, pagefn: any = Wax.template('cliTest', src)) => {
+    parse = (src: string, pagefn: WaxTemplate = Wax.template('cliTest', src)) => {
         switch(action){
-            case 'render':
-                src ? log(pagefn({})): help(action);
+        case 'render':
+            src ? log(pagefn({})): help(action);
             break;
-            case 'compile':
-                src ? log(pagefn.toString()): help(action);
+        case 'compile':
+            src ? log(pagefn.toString()): help(action);
             break;
-            case 'help':
-                help(path);
+        case 'help':
+            help(path);
             break;
-            case 'version':
-                log(version);
+        case 'version':
+            log(version);
             break;
-            default:
-                help(action);
-                error('Unrecognized Command or Action!');
+        default:
+            help(action);
+            error('Unrecognized Command or Action!');
         }
     },
     help = (action?: string) => {
-        let commands: string = `\nCommands:\n`;
+        let commands = `\nCommands:\n`;
         
         log(`Usage: waxe ${action||'[command]'} [path]\n`);
         log(description);

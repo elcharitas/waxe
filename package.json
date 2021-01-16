@@ -9,6 +9,7 @@
   },
   "scripts": {
     "test": "mocha",
+    "lint": "eslint src",
     "sample": "node lib/cli.js render samples/index.waxe > samples/index.htm",
     "docs": "cd docs && node generate.js",
     "build:src": "rm -rf lib && tsc -b src",
@@ -41,8 +42,11 @@
     "uglify-js": "^3.11.0",
     "npm-run-all": "^4.1.5",
     "typedoc": "^0.20.13",
-    "git-update-ghpages": "^1.3.0",
-    "mocha": "^8.2.1"
+    "eslint": "^7.17.0",
+    "@typescript-eslint/eslint-plugin": "^4.13.0",
+    "@typescript-eslint/parser": "^4.12.0",
+    "mocha": "^8.2.1",
+    "git-update-ghpages": "^1.3.0"
   },
   "dependencies": {},
   "optionalDependencies": {

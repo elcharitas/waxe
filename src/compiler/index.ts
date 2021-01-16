@@ -7,21 +7,21 @@ import { dbg } from '../debug';
  * @returns string
  */
 function encodeHTML(html: string): string {
-  const encodeRules: {[x: string]: string} = {
-    '&': '&#38;',
-    '<': '&#60;',
-    '>': '&#62;',
-    '"': '&#34;',
-    '\'': '&#39;',
-    '/': '&#47;',
-  };
+    const encodeRules: {[x: string]: string} = {
+        '&': '&#38;',
+        '<': '&#60;',
+        '>': '&#62;',
+        '"': '&#34;',
+        '\'': '&#39;',
+        '/': '&#47;',
+    };
 
-  const matchHTML: RegExp = /&(?!#?\w+;)|<|>|"|'|\//g;
+    const matchHTML = /&(?!#?\w+;)|<|>|"|'|\//g;
   
-  return typeof html === 'string' ? html.replace(matchHTML, (m) => encodeRules[m] || m) : html;
+    return typeof html === 'string' ? html.replace(matchHTML, (m) => encodeRules[m] || m) : html;
 }
 
-function conflictProp(context: any, props: string[] = Object.keys(context)): void {
+function conflictProp(context: Record<string, unknown>, props: string[] = Object.keys(context)): void {
     const config: PropertyDescriptor = {
         writable: false,
         configurable: false
@@ -31,10 +31,10 @@ function conflictProp(context: any, props: string[] = Object.keys(context)): voi
     });
 }
 
-const WaxTemplate: WaxTemplate = (context?: WaxContext) => '';
+const WaxTemplate: WaxTemplate = () => '';
 
 const WaxDelimiter: WaxDelimiter = {
-    blockSyntax: '@(\\w+)(\\([^@]+\\))?',
+    blockSyntax: /@(\w+)(\([^@]+\))?/,
     tagName: 1,
     argList: 2,
     endPrefix: 'end'
@@ -49,16 +49,8 @@ const WaxConfig: WaxConfig = {
     context: {
         startTime: Date.now(),
         json: JSON.stringify,
-        now(): number {
-            return Date.now();
-        },
-        escape(text: string, strict: boolean = false): string {
-            text = encodeHTML(text);
-            if(strict === true){
-                text = (escape || String)(text);
-            }
-            return text;
-        },
+        escape: encodeHTML,
+        now: Date.now,
         merge(this: WaxContext, args: WaxContext[] = []): void {
             args = [].slice.call(args);
             args.forEach(arg => {
@@ -69,10 +61,10 @@ const WaxConfig: WaxConfig = {
                 }
             });
         },
-        reverse(text: string, delimiter: string = ''): string {
+        reverse(text: string, delimiter = ''): string {
             return text.split(delimiter).reverse().join(delimiter);
         },
-        template(name: string, context: WaxContext = {}, safe: boolean = false): string {
+        template(name: string, context: WaxContext = {}, safe = false): string {
             const template: WaxTemplate = require("../waxe").template(name);
             if(safe === false && !template) {
                 dbg(template, WaxTemplate);

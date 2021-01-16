@@ -1,7 +1,16 @@
 /**
+ * TypeAlias NumStr
+ * 
  * Used internally to describe numbers, string and literals
  */
 type NumStr = number | string | WaxLiteral;
+
+/**
+ * TypeAlias WaxValue
+ *
+ * The accepted value types
+ */
+type WaxValue = NumStr | any;
 
 /**
  * **Interface WaxContext**
@@ -87,7 +96,7 @@ declare interface WaxDelimiter extends WaxCollection<any> {
      * @example `"(pattern)"`
      * @default `"@(\\w+)(\\([^@+]\\))"`
      */
-    blockSyntax?: string;
+    blockSyntax?: string | RegExp;
     /**
      * Position of tagName in RegExpMatchArray of `blockSyntax`
      *
@@ -107,6 +116,15 @@ declare interface WaxDelimiter extends WaxCollection<any> {
      * @default `"end"`
      */
     endPrefix?: string;
+}
+
+/**
+ * Interface WaxPresenter
+ * 
+ * This resolves and presents the template function
+ */
+declare interface WaxPresenter extends Function {
+    bind(this: WaxPresenter, thisArg: any, ...argArray: any[]): WaxTemplate;
 }
 
 /**
@@ -135,7 +153,7 @@ declare interface WaxTemplate extends Function {
     /** @internal */
     length: number;
     /** @internal */
-    caller: Function;
+    caller: WaxPresenter;
     /** @internal */
     prototype: any;
 }
