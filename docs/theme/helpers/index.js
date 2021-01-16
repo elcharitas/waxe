@@ -1,5 +1,5 @@
 module.exports = {
     buildURL(path){
-        return './' + path;
+        return '/api/' + path;
     }
 }
