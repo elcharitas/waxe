@@ -1,4 +1,4 @@
-import { dbg } from './debug';
+import { debug } from './debug';
 import { WaxConfig } from './compiler';
 import { parseTemplate } from './compiler/parser';
 import { CoreWax } from './plugins';
@@ -32,8 +32,8 @@ export = class Wax implements Wax {
      */
     private constructor()
     {
-        dbg('Wax', this);
-        dbg('Wax', Wax._core, null);
+        debug('Wax', this);
+        debug('Wax', Wax._core, null);
         this.configs = WaxConfig;
         this.tags = {};
         this.templates = {};
@@ -54,7 +54,7 @@ export = class Wax implements Wax {
      * @param value - Value to be assigned
      * @returns - The assigned value
      */
-    public static global(name: string, value: NumStr = null): NumStr {
+    public static global<T extends NumStr | WaxCollection<WaxDescriptor>>(name: string, value: T): T {
         return this.core.configs.context[name] = value;
     }
 
@@ -146,6 +146,17 @@ export = class Wax implements Wax {
      */
     public static setDelimiter(delimiter: WaxDelimiter): WaxDelimiter {
         return Wax.core.configs.delimiter = {...Wax.getDelimiter(), ...delimiter};
+    }
+    
+    /**
+     * Sets the configuration using the config and it value
+     *
+     * @param config - The Id of the config to set
+     * @param value - The value of thd config
+     * @returns - The configuration
+     */
+    public static setConfig<WaxConfig, T extends keyof WaxConfig>(config: string, value: WaxConfig[T]): WaxConfig[T] {
+        return Wax.core.configs[config] = value;
     }
 
     /**

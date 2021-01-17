@@ -1,25 +1,4 @@
-import { dbg } from '../debug';
-
-/**
- * Encodes HTML to prevent malicious input
- *
- * @param {string} html - The suspected html
- * @returns string
- */
-function encodeHTML(html: string): string {
-    const encodeRules: {[x: string]: string} = {
-        '&': '&#38;',
-        '<': '&#60;',
-        '>': '&#62;',
-        '"': '&#34;',
-        '\'': '&#39;',
-        '/': '&#47;',
-    };
-
-    const matchHTML = /&(?!#?\w+;)|<|>|"|'|\//g;
-  
-    return typeof html === 'string' ? html.replace(matchHTML, (m) => encodeRules[m] || m) : html;
-}
+import { debug } from '../debug';
 
 function conflictProp(context: Record<string, unknown>, props: string[] = Object.keys(context)): void {
     const config: PropertyDescriptor = {
@@ -31,8 +10,10 @@ function conflictProp(context: Record<string, unknown>, props: string[] = Object
     });
 }
 
+/** fail safe template function */
 const WaxTemplate: WaxTemplate = () => '';
 
+/** The default delimiter */
 const WaxDelimiter: WaxDelimiter = {
     blockSyntax: /@(\w+)(\([^@]+\))?/,
     tagName: 1,
@@ -43,14 +24,41 @@ const WaxDelimiter: WaxDelimiter = {
 /** The default configurations */
 const WaxConfig: WaxConfig = {
     strip: true,
-    throwUndefined: false,
+    debug: false,
     autoescape: true,
     delimiter: WaxDelimiter,
     context: {
+        /** Time the context was resolved. This may be off by a few ms */
         startTime: Date.now(),
+        /** Returns JSON string representation of object */
         json: JSON.stringify,
-        escape: encodeHTML,
+        /** Returns current timestamp */ 
         now: Date.now,
+        /**
+         * Encodes HTML to prevent malicious input
+         *
+         * @param {string} html - The suspected html
+         * @returns string
+         */
+        escape(html: string): string {
+            const encodeRules: {[x: string]: string} = {
+                '&': '&#38;',
+                '<': '&#60;',
+                '>': '&#62;',
+                '"': '&#34;',
+                '\'': '&#39;',
+                '/': '&#47;',
+            };
+            
+            const matchHTML = /&(?!#?\w+;)|<|>|"|'|\//g;
+            
+            return typeof html === 'string' ? html.replace(matchHTML, (m) => encodeRules[m] || m) : html;
+        },
+        /**
+         * Merges an array of contexts into current context
+         *
+         * @param args - The array of context to merge with
+         */
         merge(this: WaxContext, args: WaxContext[] = []): void {
             args = [].slice.call(args);
             args.forEach(arg => {
@@ -61,27 +69,31 @@ const WaxConfig: WaxConfig = {
                 }
             });
         },
+        /**
+         * Reverses a string
+         *
+         * @param text - The string to reverse
+         * @param delimiter - The character delimiter to use
+         * @returns - The reversed string
+         */
         reverse(text: string, delimiter = ''): string {
             return text.split(delimiter).reverse().join(delimiter);
         },
-        template(name: string, context: WaxContext = {}, safe = false): string {
-            const template: WaxTemplate = require("../waxe").template(name);
-            if(safe === false && !template) {
-                dbg(template, WaxTemplate);
+        template(name: string, context: WaxContext = {}, safe: boolean): string {
+            const template = require('../waxe').template(name);
+            if(safe !== true && !template) {
+                debug(name, template, WaxTemplate);
             }
             return (template || WaxTemplate)(context);
         }
     }
 };
 
-/** prevent mutation */
-conflictProp(WaxConfig);
+/** prevent mutation of context */
 conflictProp(WaxConfig.context);
 
 export {
     WaxConfig,
     WaxTemplate,
-    WaxDelimiter,
-    encodeHTML,
-    conflictProp
+    WaxDelimiter
 };

@@ -1,27 +1,8 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Wax = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.conflictProp = exports.encodeHTML = exports.WaxDelimiter = exports.WaxTemplate = exports.WaxConfig = void 0;
+exports.WaxDelimiter = exports.WaxTemplate = exports.WaxConfig = void 0;
 var debug_1 = require("../debug");
-/**
- * Encodes HTML to prevent malicious input
- *
- * @param {string} html - The suspected html
- * @returns string
- */
-function encodeHTML(html) {
-    var encodeRules = {
-        '&': '&#38;',
-        '<': '&#60;',
-        '>': '&#62;',
-        '"': '&#34;',
-        '\'': '&#39;',
-        '/': '&#47;',
-    };
-    var matchHTML = /&(?!#?\w+;)|<|>|"|'|\//g;
-    return typeof html === 'string' ? html.replace(matchHTML, function (m) { return encodeRules[m] || m; }) : html;
-}
-exports.encodeHTML = encodeHTML;
 function conflictProp(context, props) {
     if (props === void 0) { props = Object.keys(context); }
     var config = {
@@ -32,9 +13,10 @@ function conflictProp(context, props) {
         Object.defineProperty(context, name, config);
     });
 }
-exports.conflictProp = conflictProp;
+/** fail safe template function */
 var WaxTemplate = function () { return ''; };
 exports.WaxTemplate = WaxTemplate;
+/** The default delimiter */
 var WaxDelimiter = {
     blockSyntax: /@(\w+)(\([^@]+\))?/,
     tagName: 1,
@@ -45,14 +27,39 @@ exports.WaxDelimiter = WaxDelimiter;
 /** The default configurations */
 var WaxConfig = {
     strip: true,
-    throwUndefined: false,
+    debug: false,
     autoescape: true,
     delimiter: WaxDelimiter,
     context: {
+        /** Time the context was resolved. This may be off by a few ms */
         startTime: Date.now(),
+        /** Returns JSON string representation of object */
         json: JSON.stringify,
-        escape: encodeHTML,
+        /** Returns current timestamp */
         now: Date.now,
+        /**
+         * Encodes HTML to prevent malicious input
+         *
+         * @param {string} html - The suspected html
+         * @returns string
+         */
+        escape: function (html) {
+            var encodeRules = {
+                '&': '&#38;',
+                '<': '&#60;',
+                '>': '&#62;',
+                '"': '&#34;',
+                '\'': '&#39;',
+                '/': '&#47;',
+            };
+            var matchHTML = /&(?!#?\w+;)|<|>|"|'|\//g;
+            return typeof html === 'string' ? html.replace(matchHTML, function (m) { return encodeRules[m] || m; }) : html;
+        },
+        /**
+         * Merges an array of contexts into current context
+         *
+         * @param args - The array of context to merge with
+         */
         merge: function (args) {
             var _this = this;
             if (args === void 0) { args = []; }
@@ -65,24 +72,29 @@ var WaxConfig = {
                 }
             });
         },
+        /**
+         * Reverses a string
+         *
+         * @param text - The string to reverse
+         * @param delimiter - The character delimiter to use
+         * @returns - The reversed string
+         */
         reverse: function (text, delimiter) {
             if (delimiter === void 0) { delimiter = ''; }
             return text.split(delimiter).reverse().join(delimiter);
         },
         template: function (name, context, safe) {
             if (context === void 0) { context = {}; }
-            if (safe === void 0) { safe = false; }
-            var template = require("../waxe").template(name);
-            if (safe === false && !template) {
-                debug_1.dbg(template, WaxTemplate);
+            var template = require('../waxe').template(name);
+            if (safe !== true && !template) {
+                debug_1.debug(name, template, WaxTemplate);
             }
             return (template || WaxTemplate)(context);
         }
     }
 };
 exports.WaxConfig = WaxConfig;
-/** prevent mutation */
-conflictProp(WaxConfig);
+/** prevent mutation of context */
 conflictProp(WaxConfig.context);
 
 },{"../debug":4,"../waxe":8}],2:[function(require,module,exports){
@@ -92,20 +104,44 @@ exports.parseTemplate = exports.parseString = exports.traverseNode = exports.out
 var _1 = require(".");
 var debug_1 = require("../debug");
 var walker_1 = require("./walker");
+/**
+ * The identity of the output variable
+ */
 exports.out = 'out';
+/**
+ * Renames a Presenter and returns it template function
+ *
+ * @param name - The name to use
+ * @param sourceFn - The presenter
+ * @param parser - The Wax Instance
+ */
 function renameTemplate(name, sourceFn, parser) {
     return new Function('call', 'return function ' + name.replace(/\/-\./g, '') + '(){return call(this,arguments)}')(Function.apply.bind(sourceFn.bind(parser.getConfigs().context, '')));
 }
+/**
+ * Bind a transpiled source to a presenter
+ *
+ * @param source - The transpiled source
+ * @returns - The generated presenter
+ */
 function bind(source) {
     var template = _1.WaxTemplate;
     try {
         template = new Function(exports.out, "this.merge(arguments);" + exports.out + "+=" + source + ";return " + exports.out);
     }
-    catch (e) {
-        throw 'Error occured while parsing template';
+    catch (error) {
+        throw 'Wax' + error;
     }
     return template;
 }
+/**
+ * Transpiles a source and binds it for presentation
+ *
+ * @param parser - The Wax Instance
+ * @param source - The source text to transpile
+ * @param config - The config for the source
+ * @returns - The resolved presenter
+ */
 function transpile(parser, source, config) {
     var treeRoot = traverse(source, config.delimiter);
     var text = new (debug_1.extendProp(walker_1.Walker, treeRoot))(parser).walk();
@@ -114,6 +150,13 @@ function transpile(parser, source, config) {
     }
     return bind(text);
 }
+/**
+ * Traverse a source and return its Map
+ *
+ * @param source - The source text to traverse
+ * @param delimiter - The delimiter to use
+ * @returns - A Map of the source's nodes called the TreeRoot
+ */
 function traverse(source, delimiter) {
     var argList = delimiter.argList, blockSyntax = delimiter.blockSyntax, tagName = delimiter.tagName, endPrefix = delimiter.endPrefix, text = JSON.stringify(source), directives = text.match(new RegExp(blockSyntax, 'g'));
     return {
@@ -125,8 +168,15 @@ function traverse(source, delimiter) {
         endPrefix: endPrefix
     };
 }
+/**
+ * Traverse a node using a walker and node's tag options
+ *
+ * @param walker - The Walker to use
+ * @param tagOpts - A collection of options to identify a tag
+ * @returns - A fully transpiled node
+ */
 function traverseNode(walker, tagOpts) {
-    var tag = tagOpts.tag, argLiteral = tagOpts.argLiteral, node = walker.parser.getTag(tagOpts);
+    var tag = tagOpts.tag, argLiteral = tagOpts.argLiteral, configs = tagOpts.configs, node = walker.parser.getTag(tagOpts);
     var result = '';
     if (null !== node) {
         node.write = function (value) { return exports.out + "+=" + node.exec(value); };
@@ -139,9 +189,20 @@ function traverseNode(walker, tagOpts) {
     else if (walker.isBlockEnd(tag)) {
         result = '}';
     }
+    else if (configs.debug) {
+        throw "WaxNodeError: Unknown Tag \"" + tag + "\"";
+    }
     return result;
 }
 exports.traverseNode = traverseNode;
+/**
+ * Parses a literal string for special syntax/inline transpilation
+ *
+ * @param literal - The literal to transpile
+ * @param argLiteral - The literal holding current node's arguments
+ * @param createScope - Whether or not to scope the transpiled literal
+ * @returns - The transpiled literal as string
+ */
 function parseString(literal, argLiteral, createScope) {
     var list = literal.split('');
     var inString = null;
@@ -177,10 +238,17 @@ function parseString(literal, argLiteral, createScope) {
     return list.join('');
 }
 exports.parseString = parseString;
+/**
+ * Generates a new template function
+ *
+ * @param name - optional name for template
+ * @param source - The source text to use
+ * @param parser - Instance of Wax
+ * @returns - The generated function
+ */
 function parseTemplate(name, source, parser) {
     if (name === void 0) { name = 'waxe-' + Date.now(); }
     if (source === void 0) { source = ''; }
-    if (parser === void 0) { parser = null; }
     return renameTemplate(name, transpile(parser, source, parser.getConfigs()), parser);
 }
 exports.parseTemplate = parseTemplate;
@@ -192,30 +260,53 @@ exports.Walker = void 0;
 var parser_1 = require("./parser");
 /** Walker is used to walk a traversed source */
 var Walker = /** @class */ (function () {
+    /**
+     * Creates a new Walker using the Wax Instance
+     *
+     * @param parser - The Wax Instance
+     */
     function Walker(parser) {
         this.jsTags = ['for', 'if', 'while', 'switch'];
         this.parser = parser;
     }
-    Walker.prototype.walk = function (text, layout) {
+    /**
+     * Start walking through the nodes...
+     *
+     * @rerurns - The transpiled text
+     */
+    Walker.prototype.walk = function () {
         var _this = this;
         var _a;
-        if (text === void 0) { text = this.text; }
-        if (layout === void 0) { layout = ''; }
+        var text = this.text, layout = '';
         (_a = this.directives) === null || _a === void 0 ? void 0 : _a.forEach(function (rawBlock, position) {
             var block = JSON.parse("\"" + rawBlock + "\""), _a = block.match(_this.blockSyntax), _b = _this.tagName, tag = _a[_b], _c = _this.argList, _d = _a[_c], argList = _d === void 0 ? '' : _d, configs = _this.parser.getConfigs(), argLiteral = _this.toArgs(argList);
+            //handle template extending specially
             if (tag === "extends" && position === 0) {
-                layout = "+this.template(" + argLiteral.arg(0) + ")";
+                layout = parser_1.parseString("+$template(#[0])", argLiteral);
                 return text = text.replace(rawBlock, '');
             }
             text = text.replace(rawBlock, "\";" + parser_1.traverseNode(_this, { tag: tag, argLiteral: argLiteral, block: block, position: position, configs: configs, context: configs.context }) + "\n" + parser_1.out + "+=\"");
         });
         return text + layout;
     };
+    /**
+     * Checks if an end tag exist or if one can be temporarily created
+     *
+     * @param realTag - The tag name sent in e.g `endblock`
+     * @param tag - The base name of tag name e.g `block`
+     * @returns - `true` if can end else `false`
+     */
     Walker.prototype.isBlockEnd = function (realTag, tag) {
         if (realTag === void 0) { realTag = ''; }
         if (tag === void 0) { tag = realTag.replace(this.endPrefix, ''); }
         return realTag.indexOf(this.endPrefix) === 0 && (this.jsTags.indexOf(tag) > -1 || this.parser.getTag({ tag: tag }) !== null);
     };
+    /**
+     * Create an argLiteral from the argList
+     *
+     * @param list - the string holding args
+     * @returns - A literal of `list`
+     */
     Walker.prototype.toArgs = function (list) {
         var argLiteral = new String(list);
         argLiteral.arg = function (key) {
@@ -247,7 +338,7 @@ var __assign = (this && this.__assign) || function () {
     return __assign.apply(this, arguments);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.dbg = exports.extendProp = exports.debugProp = void 0;
+exports.debug = exports.extendProp = void 0;
 /** Some common Debug Nesaages */
 var debugMessages = [
     '%1 should be %2 as %3',
@@ -256,7 +347,7 @@ var debugMessages = [
 /** We'd only be throwing TypeErrors */
 var debugStack = TypeError;
 /**
- * Generate Debug args by debugging the type of the constraint
+ * Generate Debug args by checking the type of the constraint
  *
  * @param args - default args
  * @param constraint - The variable to test
@@ -278,18 +369,29 @@ function debugType(args, constraint, expected) {
     }
     return args;
 }
-function debugProp(object, property) {
-    return Object.prototype.hasOwnProperty.call(object, property);
-}
-exports.debugProp = debugProp;
-function extendProp(object, constraint) {
-    Object.defineProperty(object, 'prototype', {
-        value: __assign(__assign({}, object.prototype), (constraint.prototype || constraint))
+/**
+ * Extend a parent class prototype with a child class or an object
+ *
+ * @param parent - The class to extend
+ * @param constraint - The child class
+ * @returns - The extended class
+ */
+function extendProp(parent, constraint) {
+    Object.defineProperty(parent, 'prototype', {
+        value: __assign(__assign({}, parent.prototype), (constraint.prototype || constraint))
     });
-    return object;
+    return parent;
 }
 exports.extendProp = extendProp;
-function dbg(check, constraint, expected) {
+/**
+ * Checks a constraint against an expected type looking for clauses
+ *
+ * @param check - The name of the constraint
+ * @param constraint - The variable to check
+ * @param expected - The expected variable type
+ * @throws TypeError if clauses are found
+ */
+function debug(check, constraint, expected) {
     if (expected === void 0) { expected = {}; }
     var args = debugType([check], constraint, expected);
     var _a = debugMessages, _b = args.length - 2, _c = _a[_b], debugInfo = _c === void 0 ? 'Unknown' : _c;
@@ -300,7 +402,7 @@ function dbg(check, constraint, expected) {
         throw new debugStack(debugInfo);
     }
 }
-exports.dbg = dbg;
+exports.debug = debug;
 
 },{}],5:[function(require,module,exports){
 "use strict";
@@ -343,7 +445,7 @@ var CoreDirectives = /** @class */ (function () {
         return "*/case " + literal + ":";
     };
     CoreDirectives.prototype.break = function (literal) {
-        return literal.length === 0 ? 'break;/*' : "if(" + literal.text() + "){break}";
+        return literal.length === 0 ? 'break/*' : "if(" + literal.text() + "){break}";
     };
     CoreDirectives.prototype.continue = function (literal) {
         return "if(" + (literal.text() || literal.length == 0) + "){continue}";
@@ -444,8 +546,8 @@ module.exports = (_a = /** @class */ (function () {
          * @throws TypeErrors - When called directly or attempt to reinstantiate
          */
         function Wax() {
-            debug_1.dbg('Wax', this);
-            debug_1.dbg('Wax', Wax._core, null);
+            debug_1.debug('Wax', this);
+            debug_1.debug('Wax', Wax._core, null);
             this.configs = compiler_1.WaxConfig;
             this.tags = {};
             this.templates = {};
@@ -466,7 +568,6 @@ module.exports = (_a = /** @class */ (function () {
          * @returns - The assigned value
          */
         Wax.global = function (name, value) {
-            if (value === void 0) { value = null; }
             return this.core.configs.context[name] = value;
         };
         /**
@@ -557,6 +658,16 @@ module.exports = (_a = /** @class */ (function () {
          */
         Wax.setDelimiter = function (delimiter) {
             return Wax.core.configs.delimiter = __assign(__assign({}, Wax.getDelimiter()), delimiter);
+        };
+        /**
+         * Sets the configuration using the config and it value
+         *
+         * @param config - The Id of the config to set
+         * @param value - The value of thd config
+         * @returns - The configuration
+         */
+        Wax.setConfig = function (config, value) {
+            return Wax.core.configs[config] = value;
         };
         /**
          * Gets the {@link WaxConfig | configuration options}

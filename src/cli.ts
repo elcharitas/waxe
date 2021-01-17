@@ -2,8 +2,9 @@ import Wax from './waxe';
 import { readFileSync } from 'fs';
 
 const { 2: action, 3: path } = process.argv,
-    { version, description } = require('../package.json'),
     { log, error } = console,
+    version = '0.0.6',
+    description = 'Waxe CLI Tool',
     cmdHelp: { [command: string]: string } = {
         render: `[path]\tRenders a template`,
         compile: `[path]\tRenders a template`,

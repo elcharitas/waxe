@@ -1,5 +1,5 @@
 node_js:
-- 10
+- 9
  
 env:
   global:
@@ -9,9 +9,8 @@ env:
     - GIT_SOURCE: docs/_dist
  
 script:
-- npm i
-- npm t
+- npm install
  
 after_success:
-- npm run docs
-- if [ "$TRAVIS_BRANCH" = "master" -a "$TRAVIS_PULL_REQUEST" = "false" ]; then ./node_modules/.bin/git-update-ghpages -e; fi
+- npm test
+- npm run lint

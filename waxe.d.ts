@@ -1,23 +1,23 @@
 /**
- * TypeAlias NumStr
+ * **TypeAlias NumStr**
  * 
  * Used internally to describe numbers, string and literals
  */
 type NumStr = number | string | WaxLiteral;
 
 /**
- * TypeAlias WaxValue
+ * **TypeAlias WaxValue**
  *
  * The accepted value types
  */
-type WaxValue = NumStr | any;
+type WaxValue = NumStr | WaxPresenter | WaxCollection<WaxDescriptor>;
 
 /**
  * **Interface WaxContext**
  *
  * This is an object defining variables and macros
  */
-declare interface WaxContext extends WaxCollection<NumStr|object> {
+declare interface WaxContext extends WaxCollection<WaxValue> {
     /**
      * @returns - The current timestamp
      */
@@ -63,7 +63,7 @@ declare interface WaxConfig extends WaxCollection<boolean|WaxContext|WaxDelimite
      * 
      * @default false
      */
-    throwUndefined?: boolean;
+    debug?: boolean;
     /**
      * Whether or not to escape outputs
      *
@@ -89,7 +89,7 @@ declare interface WaxConfig extends WaxCollection<boolean|WaxContext|WaxDelimite
  *
  * This is a record defining how templates are parsed
  */
-declare interface WaxDelimiter extends WaxCollection<any> {
+declare interface WaxDelimiter extends WaxCollection<NumStr|RegExp|Array> {
     /**
      * RegExp Pattern String to match blocks.
      * 
@@ -119,12 +119,12 @@ declare interface WaxDelimiter extends WaxCollection<any> {
 }
 
 /**
- * Interface WaxPresenter
+ * **Interface WaxPresenter**
  * 
  * This resolves and presents the template function
  */
 declare interface WaxPresenter extends Function {
-    bind(this: WaxPresenter, thisArg: any, ...argArray: any[]): WaxTemplate;
+    bind<T extends Record<string, unknown>>(this: WaxPresenter, thisArg: T, ...argArray: T[] | NumStr[]): WaxTemplate;
 }
 
 /**
@@ -155,7 +155,7 @@ declare interface WaxTemplate extends Function {
     /** @internal */
     caller: WaxPresenter;
     /** @internal */
-    prototype: any;
+    prototype: WaxPresenter;
 }
 
 /**
@@ -297,7 +297,7 @@ declare interface WaxDescriptor {
      */
     (this: WaxNode, literal?: WaxLiteral): string;
     /** @internal */
-    prototype: Function;
+    prototype: WaxPresenter;
 }
 
 /**
@@ -322,6 +322,8 @@ declare interface WaxTreeRoot extends WaxDelimiter {
  * This is used to traverse a source text and resolve its node
  */
 declare interface WaxWalker extends WaxTreeRoot, WaxTagOpts {
+    directives: RegExpMatchArray;
+    parser: Wax;
     /**
      * Start walking through the source text's Nodes
      *
@@ -378,7 +380,7 @@ declare interface Wax {
      * @param value - Value to be assigned
      * @returns - The assigned value
      */
-    global(name: string, value: any): any;
+    global<T extends NumStr | WaxCollection<WaxDescriptor>>(name: string, value: T): T;
     /**
      * Create a new directive
      * 
@@ -427,6 +429,14 @@ declare interface Wax {
      * @param visible - Whether or not to make elements visible
      */
     resolve(selectors: string, context: WaxContext, visible: boolean): void;
+    /**
+     * Sets the configuration using the config and it value
+     *
+     * @param config - The Id of the config to set
+     * @param value - The value of thd config
+     * @returns - The configuration
+     */
+    setConfig<WaxConfig, T extends keyof WaxConfig>(config: string, value: WaxConfig[T]): WaxConfig[T];
     /**
      * Gets the {@link WaxConfig | configuration options}
      */

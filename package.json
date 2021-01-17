@@ -9,7 +9,7 @@
   },
   "scripts": {
     "test": "mocha",
-    "lint": "eslint src",
+    "lint": "eslint waxe.d.ts src",
     "sample": "node lib/cli.js render samples/index.waxe > samples/index.htm",
     "docs": "cd docs && node generate.js",
     "build:src": "rm -rf lib && tsc -b src",

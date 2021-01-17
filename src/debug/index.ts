@@ -8,7 +8,7 @@ const debugMessages: string[] = [
 const debugStack: typeof Error = TypeError;
 
 /**
- * Generate Debug args by debugging the type of the constraint
+ * Generate Debug args by checking the type of the constraint
  *
  * @param args - default args
  * @param constraint - The variable to test
@@ -33,21 +33,32 @@ function debugType<T>(args: string[], constraint?: T, expected?: WaxPresenter | 
     return args;
 }
 
-export function debugProp<T>(object: T, property: string): boolean {
-    return Object.prototype.hasOwnProperty.call(object, property);
-}
+/**
+ * Extend a parent class prototype with a child class or an object
+ *
+ * @param parent - The class to extend
+ * @param constraint - The child class
+ * @returns - The extended class
+ */
+export function extendProp<T extends WaxPresenter>(parent: T, constraint: WaxValue): T {
 
-export function extendProp(object: WaxValue, constraint: WaxValue): WaxValue {
-
-    Object.defineProperty(object, 'prototype', {
-        value: { ...object.prototype, ...(constraint.prototype||constraint) }
+    Object.defineProperty(parent, 'prototype', {
+        value: { ...parent.prototype, ...((constraint as WaxPresenter).prototype||constraint) }
     });
     
-    return object;
+    return parent;
 }
 
-export function dbg<T>(check: NumStr | WaxPresenter, constraint?: T, expected: WaxValue = {}): void {
-    const args: string[] = debugType([check as string], constraint, expected);
+/**
+ * Checks a constraint against an expected type looking for clauses
+ *
+ * @param check - The name of the constraint
+ * @param constraint - The variable to check
+ * @param expected - The expected variable type
+ * @throws TypeError if clauses are found
+ */
+export function debug<T>(check: NumStr | WaxPresenter, constraint?: T, expected: WaxValue = {}): void {
+    const args: string[] = debugType([check as string], constraint, expected as WaxPresenter | unknown);
     let { [args.length - 2]: debugInfo = 'Unknown' } = debugMessages;
     
     args.forEach((arg: string, index: number) => {
