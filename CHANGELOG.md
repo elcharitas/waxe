@@ -7,10 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Eslint to check coding styles
-- Added buildURL helper
+- Added buildURL helper for docs
 
 ### Changed
-- fixed bugs in docs generator 
+- Immutate WaxDelimiter.endPrefix
+- fixed bugs in docs generator
+
+### Deprecated
+- @bind directive
 
 ## [0.0.7] (2021-01-15)
 ### Added
