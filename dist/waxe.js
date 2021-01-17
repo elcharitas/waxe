@@ -12,17 +12,18 @@ function conflictProp(context, props) {
     props.forEach(function (name) {
         Object.defineProperty(context, name, config);
     });
+    return context;
 }
 /** fail safe template function */
 var WaxTemplate = function () { return ''; };
 exports.WaxTemplate = WaxTemplate;
 /** The default delimiter */
-var WaxDelimiter = {
+var WaxDelimiter = conflictProp({
     blockSyntax: /@(\w+)(\([^@]+\))?/,
     tagName: 1,
     argList: 2,
     endPrefix: 'end'
-};
+}, ['endPrefix']);
 exports.WaxDelimiter = WaxDelimiter;
 /** The default configurations */
 var WaxConfig = {
@@ -477,9 +478,7 @@ var misc_1 = require("./misc");
 /** The default plugin of Waxe */
 var CoreWax = /** @class */ (function () {
     /**
-     * Define directives and add `$core` global
-     *
-     * @param Wax - The Wax Instance
+     * Define the core directives
      */
     function CoreWax() {
         this.directives = new (debug_1.extendProp(core_1.CoreDirectives, misc_1.MiscDirectives.prototype));

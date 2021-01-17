@@ -1,6 +1,6 @@
 import { debug } from '../debug';
 
-function conflictProp(context: Record<string, unknown>, props: string[] = Object.keys(context)): void {
+function conflictProp<T extends Record<string, unknown>>(context: T, props: Array<keyof T> = Object.keys(context)): T {
     const config: PropertyDescriptor = {
         writable: false,
         configurable: false
@@ -8,18 +8,19 @@ function conflictProp(context: Record<string, unknown>, props: string[] = Object
     props.forEach(name => {
         Object.defineProperty(context, name, config);
     });
+    return context;
 }
 
 /** fail safe template function */
 const WaxTemplate: WaxTemplate = () => '';
 
 /** The default delimiter */
-const WaxDelimiter: WaxDelimiter = {
+const WaxDelimiter: WaxDelimiter = conflictProp({
     blockSyntax: /@(\w+)(\([^@]+\))?/,
     tagName: 1,
     argList: 2,
     endPrefix: 'end'
-};
+}, ['endPrefix']);
 
 /** The default configurations */
 const WaxConfig: WaxConfig = {
