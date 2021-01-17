@@ -117,7 +117,7 @@ exports.out = 'out';
  * @param parser - The Wax Instance
  */
 function renameTemplate(name, sourceFn, parser) {
-    return new Function('call', 'return function ' + name.replace(/\/-\./g, '') + '(){return call(this,arguments)}')(Function.apply.bind(sourceFn.bind(parser.getConfigs().context, '')));
+    return new Function('call', 'return function ' + name.replace(/[/\-.]+/g, '') + '(){return call(this,arguments)}')(Function.apply.bind(sourceFn.bind(parser.getConfigs().context, '')));
 }
 /**
  * Bind a transpiled source to a presenter

@@ -15,7 +15,7 @@ export const out = 'out';
  * @param parser - The Wax Instance
  */
 function renameTemplate(name: string, sourceFn: WaxPresenter, parser: Wax): WaxTemplate {
-    return new Function('call', 'return function ' + name.replace(/\/-\./g, '') + '(){return call(this,arguments)}')(
+    return new Function('call', 'return function ' + name.replace(/[/\-.]+/g, '') + '(){return call(this,arguments)}')(
         Function.apply.bind(
             sourceFn.bind(parser.getConfigs().context, '')
         )
