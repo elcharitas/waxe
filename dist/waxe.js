@@ -481,9 +481,8 @@ var CoreWax = /** @class */ (function () {
      *
      * @param Wax - The Wax Instance
      */
-    function CoreWax(Wax) {
+    function CoreWax() {
         this.directives = new (debug_1.extendProp(core_1.CoreDirectives, misc_1.MiscDirectives.prototype));
-        Wax.global('$core', this.directives);
     }
     return CoreWax;
 }());
@@ -496,26 +495,49 @@ exports.MiscDirectives = void 0;
 var MiscDirectives = /** @class */ (function () {
     function MiscDirectives() {
     }
+    /**
+     * Includes a template if it exists only
+     */
     MiscDirectives.prototype.includeIf = function () {
-        return this.write("$template(#[0],#[1],1)");
+        return this.write("$template(#[0],#[1],!0)");
     };
+    /**
+     * Includes a template when a condition is met
+     */
     MiscDirectives.prototype.includeWhen = function () {
         return this.write("#[0]?$template(#[1],#[2]):''");
     };
-    MiscDirectives.prototype.bind = function () {
-        return this.write("$[\"bind\"+#[0]]=#[1];setInterval(function(){document.querySelectorAll(#[0]).forEach(function(hook){if($[\"bind\"+#[0]]!==#[1]){hook.value = this[\"bind\"+#[0]]=#[1]}})})");
-    };
+    /**
+     * Escapes a given text for malicious inputs
+     */
     MiscDirectives.prototype.escape = function () {
         return this.write("$escape(#[0]||#[1])");
     };
+    /**
+     * Outputs the JSON representation of any value
+     */
     MiscDirectives.prototype.json = function (literal) {
         return this.write("$json" + literal);
     };
+    /**
+     * Run good old javascript in a template
+     */
     MiscDirectives.prototype.js = function () {
         return 'var hjs=out;';
     };
+    /**
+     * Closes and evaluates the js directive
+     */
     MiscDirectives.prototype.endjs = function () {
         return this.exec("hjs=$reverse(out).replace($reverse(hjs),\"\");out=$reverse($reverse(out).replace(hjs,\"\"));(new Function($reverse(hjs))).bind(this)();delete hjs");
+    };
+    /**
+     * Binds an element to a value
+     *
+     * @deprecated This directive stopped working as expected in v0.0.7 hence support is dropped. It will be removed in v0.1
+     */
+    MiscDirectives.prototype.bind = function () {
+        return this.write("$[\"bind\"+#[0]]=#[1];setInterval(function(){document.querySelectorAll(#[0]).forEach(function(hook){if($[\"bind\"+#[0]]!==#[1]){hook.value = this[\"bind\"+#[0]]=#[1]}})})");
     };
     return MiscDirectives;
 }());

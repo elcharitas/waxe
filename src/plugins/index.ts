@@ -10,14 +10,10 @@ export class CoreWax implements WaxPlugin {
     public directives: WaxPlugin['directives'];
 
     /**
-     * Define directives and add `$core` global
-     *
-     * @param Wax - The Wax Instance
+     * Define the core directives
      */
-    public constructor(Wax: Wax) {
+    public constructor() {
 
         this.directives = new (extendProp(CoreDirectives, MiscDirectives.prototype));
-        
-        Wax.global('$core', this.directives);
     }
 }
