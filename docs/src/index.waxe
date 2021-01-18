@@ -1,6 +1,5 @@
 @extends('_layouts/base.waxe')
-
-@block('main')
+@section('main')
         <div class="container container-main">
             <div class="content-wrap">
                 <div class="tsd-panel tsd-typography">
@@ -8,4 +7,4 @@
                 </div>
             </div>
         </div>
-@endblock
+@endsection

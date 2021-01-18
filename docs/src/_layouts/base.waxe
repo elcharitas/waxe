@@ -11,9 +11,9 @@
     <body class="page">
         @includeIf('_layouts/header.waxe')
         
-        @block('main')
+        @section('main')
             @includeIf('_layouts/error.waxe')
-        @endblock
+        @show
         
         @includeIf('_layouts/footer.waxe')
     </body>

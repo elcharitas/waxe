@@ -11,6 +11,31 @@ function conflictProp<T extends Record<string, unknown>>(context: T, props: Arra
     return context;
 }
 
+function parsePath(path: string, base_path: string): string {
+    if(path.charAt(0) == "/") {
+        return path;
+    }
+    else if(path.substring(0,2) == "./") {
+        path = "." + path;
+    }
+    else {
+        path = "../" + path;
+    }
+    
+    return base_path + path;
+}
+
+function absolutePath(path: string, base_path = '/'): string {
+    path = parsePath(path, base_path);
+    
+    while(/\/\.\.\//.test(path = path.replace(/[^\/]+\/+\.\.\//g,"")));
+    
+    /* Escape certain characters to prevent XSS */
+    path = path.replace(/\.$/,"").replace(/\/\./g,"").replace(/"/g,"%22")
+            .replace(/'/g,"%27").replace(/</g,"%3C").replace(/>/g,"%3E");
+    return path;
+}
+
 /** fail safe template function */
 const WaxTemplate: WaxTemplate = () => '';
 
@@ -29,6 +54,8 @@ const WaxConfig: WaxConfig = {
     autoescape: true,
     delimiter: WaxDelimiter,
     context: conflictProp({
+        /** A collection which holds the template blocks */
+        __env: {},
         /** Time the context was resolved. This may be off by a few ms */
         startTime: Date.now(),
         /** Returns JSON string representation of object */
@@ -93,5 +120,6 @@ const WaxConfig: WaxConfig = {
 export {
     WaxConfig,
     WaxTemplate,
-    WaxDelimiter
+    WaxDelimiter,
+    absolutePath
 };

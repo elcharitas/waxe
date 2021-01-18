@@ -1,7 +1,7 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Wax = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.WaxDelimiter = exports.WaxTemplate = exports.WaxConfig = void 0;
+exports.absolutePath = exports.WaxDelimiter = exports.WaxTemplate = exports.WaxConfig = void 0;
 var debug_1 = require("../debug");
 function conflictProp(context, props) {
     if (props === void 0) { props = Object.keys(context); }
@@ -14,6 +14,29 @@ function conflictProp(context, props) {
     });
     return context;
 }
+function parsePath(path, base_path) {
+    if (path.charAt(0) == "/") {
+        return path;
+    }
+    else if (path.substring(0, 2) == "./") {
+        path = "." + path;
+    }
+    else {
+        path = "../" + path;
+    }
+    return base_path + path;
+}
+function absolutePath(path, base_path) {
+    if (base_path === void 0) { base_path = '/'; }
+    path = parsePath(path, base_path);
+    while (/\/\.\.\//.test(path = path.replace(/[^\/]+\/+\.\.\//g, "")))
+        ;
+    /* Escape certain characters to prevent XSS */
+    path = path.replace(/\.$/, "").replace(/\/\./g, "").replace(/"/g, "%22")
+        .replace(/'/g, "%27").replace(/</g, "%3C").replace(/>/g, "%3E");
+    return path;
+}
+exports.absolutePath = absolutePath;
 /** fail safe template function */
 var WaxTemplate = function () { return ''; };
 exports.WaxTemplate = WaxTemplate;
@@ -32,6 +55,8 @@ var WaxConfig = {
     autoescape: true,
     delimiter: WaxDelimiter,
     context: conflictProp({
+        /** A collection which holds the template blocks */
+        __env: {},
         /** Time the context was resolved. This may be off by a few ms */
         startTime: Date.now(),
         /** Returns JSON string representation of object */
@@ -417,17 +442,38 @@ exports.CoreDirectives = void 0;
 var CoreDirectives = /** @class */ (function () {
     function CoreDirectives() {
     }
+    /**
+     * Sets a local variable for use
+     */
     CoreDirectives.prototype.set = function () {
         return this.exec("eval(#[0]+\"=\"+$escape($json(#[1])));");
     };
+    /**
+     * Creates a referenced/scoped variable
+     */
     CoreDirectives.prototype.define = function () {
         return this.exec("$[#[0]]=#[1];");
     };
+    /**
+     * Creates a block, which is essentially for layouts
+     */
+    CoreDirectives.prototype.section = function (sec) {
+        return this.exec("$__super=$__env[" + sec + "]||new Function('s','return s()');var _block=$__env[" + sec + "]=$__super.bind(this,function(s,_block){var out='';", false);
+    };
+    /**
+     * Closes and evaluates a block
+     */
+    CoreDirectives.prototype.endsection = function () {
+        return this.exec("return out});delete _block", false);
+    };
+    CoreDirectives.prototype.show = function () {
+        return this.argLiteral.length > 0 ? this.write("$__env[#[0]].bind(this)()") : this.exec("return out});out+=_block.bind(this)()", false);
+    };
     CoreDirectives.prototype.macro = function () {
-        return this.exec("$[#[0]]=function(){var name=#[0];var call=$[name];var args=[].slice.call(arguments);var out = \"\";", false);
+        return this.exec("$[#[0]]=(function(){var name=#[0];var call=$[name];var args=[].slice.call(arguments);var out = \"\";", false);
     };
     CoreDirectives.prototype.endmacro = function () {
-        return "return out;}";
+        return "return out;}).bind(this)";
     };
     CoreDirectives.prototype.include = function () {
         return this.write("$template(#[0],#[1])");
@@ -501,6 +547,12 @@ var MiscDirectives = /** @class */ (function () {
      */
     MiscDirectives.prototype.comment = function () {
         return;
+    };
+    /**
+     * call to output block parent
+     */
+    MiscDirectives.prototype.parent = function () {
+        return this.write("($__super||String)()");
     };
     /**
      * Includes a template if it exists only

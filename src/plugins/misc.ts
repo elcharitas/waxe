@@ -8,6 +8,13 @@ export class MiscDirectives {
     public comment(): string {
         return;
     }
+    
+    /**
+     * call to output block parent
+     */
+    public parent(this: WaxNode): string {
+        return this.write(`($__super||String)()`);
+    }
 
     /**
      * Includes a template if it exists only
