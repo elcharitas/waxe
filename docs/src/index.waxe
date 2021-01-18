@@ -1,31 +1,11 @@
-<!doctype html>
-<html class="minimal no-js">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title> @yield('item.name', 'Home') | @yield('project.name')</title>
-    <meta name="description" content="Documentation for ">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="/api/assets/css/main.css" rel="stylesheet"/>
-    <meta http-equiv="refresh" content="2;url=/api/" />
-</head>
-<body>
-@includeIf('_layouts/header.waxe')
+@extends('_layouts/base.waxe')
 
-<nav class="tsd-navigation secondary">
-    <ul>
-    
-    </ul>
-</nav>
-
-<div class="container container-main">
-    <div class="content-wrap">
+@block('main')
+        <div class="container container-main">
+            <div class="content-wrap">
                 <div class="tsd-panel tsd-typography">
-                    
+                    Waxe
                 </div>
-        @includeIf('_layouts/footer.waxe')
-    </div>
-</div>
-
-</body>
-</html>
+            </div>
+        </div>
+@endblock

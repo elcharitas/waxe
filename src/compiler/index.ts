@@ -28,7 +28,7 @@ const WaxConfig: WaxConfig = {
     debug: false,
     autoescape: true,
     delimiter: WaxDelimiter,
-    context: {
+    context: conflictProp({
         /** Time the context was resolved. This may be off by a few ms */
         startTime: Date.now(),
         /** Returns JSON string representation of object */
@@ -80,18 +80,15 @@ const WaxConfig: WaxConfig = {
         reverse(text: string, delimiter = ''): string {
             return text.split(delimiter).reverse().join(delimiter);
         },
-        template(name: string, context: WaxContext = {}, safe: boolean): string {
-            const template = require('../waxe').template(name);
+        template(id: string, context: WaxContext = {}, safe: boolean): string {
+            const template = require('../waxe').template(id);
             if(safe !== true && !template) {
-                debug(name, template, WaxTemplate);
+                debug(`can't extend ${id}!`, template, WaxTemplate);
             }
             return (template || WaxTemplate)(context);
         }
-    }
+    })
 };
-
-/** prevent mutation of context */
-conflictProp(WaxConfig.context);
 
 export {
     WaxConfig,

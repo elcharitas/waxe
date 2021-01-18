@@ -1,0 +1,20 @@
+<!doctype html>
+<html class="minimal no-js">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title> @yield($title, 'Home') | @yield($project.name)</title>
+        <meta name="description" content="Documentation for @yield($project.name)">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="@url('css/main.css', 'asset')" rel="stylesheet"/>
+    </head>
+    <body class="page">
+        @includeIf('_layouts/header.waxe')
+        
+        @block('main')
+            @includeIf('_layouts/error.waxe')
+        @endblock
+        
+        @includeIf('_layouts/footer.waxe')
+    </body>
+</html>

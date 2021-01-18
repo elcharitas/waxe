@@ -59,13 +59,13 @@ export function extendProp<T extends WaxPresenter>(parent: T, constraint: WaxVal
  */
 export function debug<T>(check: NumStr | WaxPresenter, constraint?: T, expected: WaxValue = {}): void {
     const args: string[] = debugType([check as string], constraint, expected as WaxPresenter | unknown);
-    let { [args.length - 2]: debugInfo = 'Unknown' } = debugMessages;
+    let { [args.length - 2]: debugInfo = check as string } = debugMessages;
     
     args.forEach((arg: string, index: number) => {
         debugInfo = debugInfo.replace(`%${index+1}`, arg);
     });
     
-    if(args.length > 1 && debugStack !== null){
+    if(args.length > 1){
         throw new debugStack(debugInfo);
     }
 }

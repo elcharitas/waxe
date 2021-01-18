@@ -278,9 +278,10 @@ declare interface WaxNode extends WaxTagOpts {
      *
      * @since 0.0.7
      * @param value - The string to parse
+     * @param scoped - Whether or not to scope the execution (added in 0.0.8+)
      * @returns - A processed string from a literal
      */
-    exec?(value: WaxLiteral): string;
+    exec?(value: WaxLiteral, scoped?: boolean): string;
 }
 
 /**

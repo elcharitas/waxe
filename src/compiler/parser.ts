@@ -8,6 +8,11 @@ import { Walker } from './walker';
 export const out = 'out';
 
 /**
+ * JSON string generator
+ */
+const strfy = JSON.stringify;
+
+/**
  * Renames a Presenter and returns it template function
  *
  * @param name - The name to use
@@ -15,10 +20,10 @@ export const out = 'out';
  * @param parser - The Wax Instance
  */
 function renameTemplate(name: string, sourceFn: WaxPresenter, parser: Wax): WaxTemplate {
-    return new Function('call', 'return function ' + name.replace(/[/\-.]+/g, '') + '(){return call(this,arguments)}')(
+    return new Function('call,tpl', 'return tpl['+strfy(name)+']=function(){return call(this,arguments)}')(
         Function.apply.bind(
             sourceFn.bind(parser.getConfigs().context, '')
-        )
+        ), {}
     );
 }
 
@@ -69,7 +74,7 @@ function transpile(parser: Wax, source: string, config: WaxConfig): WaxPresenter
  */
 function traverse(source: string, delimiter: WaxDelimiter): WaxTreeRoot {
     const { argList, blockSyntax, tagName, endPrefix } = delimiter,
-        text: string = JSON.stringify(source),
+        text: string = strfy(source),
         directives: RegExpMatchArray = text.match(new RegExp(blockSyntax, 'g'));
     return {
         text,
@@ -95,7 +100,7 @@ export function traverseNode(walker: WaxWalker, tagOpts: WaxTagOpts): string {
     
     if (null !== node) {
         node.write = (value: WaxLiteral) => `${out}+=${node.exec(value)}`;
-        node.exec = (value: WaxLiteral) => parseString(value, argLiteral, true);
+        node.exec = (value: WaxLiteral, scoped = true) => parseString(value, argLiteral, scoped);
         result = node.descriptor.call(node, argLiteral);
     }
     else if (walker.jsTags.indexOf(tag) > -1) {
@@ -151,7 +156,7 @@ export function parseString(literal: WaxLiteral, argLiteral?: WaxLiteral, create
     });
     
     if(createScope === true){
-        return `new Function(${JSON.stringify('return '+list.join(''))}).apply(this,[${argLiteral ? argLiteral.text() : ''}]);`;
+        return `new Function(${strfy('return '+list.join(''))}).apply(this,[${argLiteral ? argLiteral.text() : ''}]);`;
     }
     return list.join('');
 }

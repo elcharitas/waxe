@@ -31,7 +31,7 @@ var WaxConfig = {
     debug: false,
     autoescape: true,
     delimiter: WaxDelimiter,
-    context: {
+    context: conflictProp({
         /** Time the context was resolved. This may be off by a few ms */
         startTime: Date.now(),
         /** Returns JSON string representation of object */
@@ -84,19 +84,17 @@ var WaxConfig = {
             if (delimiter === void 0) { delimiter = ''; }
             return text.split(delimiter).reverse().join(delimiter);
         },
-        template: function (name, context, safe) {
+        template: function (id, context, safe) {
             if (context === void 0) { context = {}; }
-            var template = require('../waxe').template(name);
+            var template = require('../waxe').template(id);
             if (safe !== true && !template) {
-                debug_1.debug(name, template, WaxTemplate);
+                debug_1.debug("can't extend " + id + "!", template, WaxTemplate);
             }
             return (template || WaxTemplate)(context);
         }
-    }
+    })
 };
 exports.WaxConfig = WaxConfig;
-/** prevent mutation of context */
-conflictProp(WaxConfig.context);
 
 },{"../debug":4,"../waxe":8}],2:[function(require,module,exports){
 "use strict";
@@ -110,6 +108,10 @@ var walker_1 = require("./walker");
  */
 exports.out = 'out';
 /**
+ * JSON string generator
+ */
+var strfy = JSON.stringify;
+/**
  * Renames a Presenter and returns it template function
  *
  * @param name - The name to use
@@ -117,7 +119,7 @@ exports.out = 'out';
  * @param parser - The Wax Instance
  */
 function renameTemplate(name, sourceFn, parser) {
-    return new Function('call', 'return function ' + name.replace(/[/\-.]+/g, '') + '(){return call(this,arguments)}')(Function.apply.bind(sourceFn.bind(parser.getConfigs().context, '')));
+    return new Function('call,tpl', 'return tpl[' + strfy(name) + ']=function(){return call(this,arguments)}')(Function.apply.bind(sourceFn.bind(parser.getConfigs().context, '')), {});
 }
 /**
  * Bind a transpiled source to a presenter
@@ -159,7 +161,7 @@ function transpile(parser, source, config) {
  * @returns - A Map of the source's nodes called the TreeRoot
  */
 function traverse(source, delimiter) {
-    var argList = delimiter.argList, blockSyntax = delimiter.blockSyntax, tagName = delimiter.tagName, endPrefix = delimiter.endPrefix, text = JSON.stringify(source), directives = text.match(new RegExp(blockSyntax, 'g'));
+    var argList = delimiter.argList, blockSyntax = delimiter.blockSyntax, tagName = delimiter.tagName, endPrefix = delimiter.endPrefix, text = strfy(source), directives = text.match(new RegExp(blockSyntax, 'g'));
     return {
         text: text,
         directives: directives,
@@ -181,7 +183,10 @@ function traverseNode(walker, tagOpts) {
     var result = '';
     if (null !== node) {
         node.write = function (value) { return exports.out + "+=" + node.exec(value); };
-        node.exec = function (value) { return parseString(value, argLiteral, true); };
+        node.exec = function (value, scoped) {
+            if (scoped === void 0) { scoped = true; }
+            return parseString(value, argLiteral, scoped);
+        };
         result = node.descriptor.call(node, argLiteral);
     }
     else if (walker.jsTags.indexOf(tag) > -1) {
@@ -234,7 +239,7 @@ function parseString(literal, argLiteral, createScope) {
         list[index] = char;
     });
     if (createScope === true) {
-        return "new Function(" + JSON.stringify('return ' + list.join('')) + ").apply(this,[" + (argLiteral ? argLiteral.text() : '') + "]);";
+        return "new Function(" + strfy('return ' + list.join('')) + ").apply(this,[" + (argLiteral ? argLiteral.text() : '') + "]);";
     }
     return list.join('');
 }
@@ -283,7 +288,7 @@ var Walker = /** @class */ (function () {
             var block = JSON.parse("\"" + rawBlock + "\""), _a = block.match(_this.blockSyntax), _b = _this.tagName, tag = _a[_b], _c = _this.argList, _d = _a[_c], argList = _d === void 0 ? '' : _d, configs = _this.parser.getConfigs(), argLiteral = _this.toArgs(argList);
             //handle template extending specially
             if (tag === "extends" && position === 0) {
-                layout = parser_1.parseString("+$template(#[0])", argLiteral);
+                layout = parser_1.parseString("+$template(" + argLiteral + ")");
                 return text = text.replace(rawBlock, '');
             }
             text = text.replace(rawBlock, "\";" + parser_1.traverseNode(_this, { tag: tag, argLiteral: argLiteral, block: block, position: position, configs: configs, context: configs.context }) + "\n" + parser_1.out + "+=\"");
@@ -395,11 +400,11 @@ exports.extendProp = extendProp;
 function debug(check, constraint, expected) {
     if (expected === void 0) { expected = {}; }
     var args = debugType([check], constraint, expected);
-    var _a = debugMessages, _b = args.length - 2, _c = _a[_b], debugInfo = _c === void 0 ? 'Unknown' : _c;
+    var _a = debugMessages, _b = args.length - 2, _c = _a[_b], debugInfo = _c === void 0 ? check : _c;
     args.forEach(function (arg, index) {
         debugInfo = debugInfo.replace("%" + (index + 1), arg);
     });
-    if (args.length > 1 && debugStack !== null) {
+    if (args.length > 1) {
         throw new debugStack(debugInfo);
     }
 }
@@ -418,11 +423,8 @@ var CoreDirectives = /** @class */ (function () {
     CoreDirectives.prototype.define = function () {
         return this.exec("$[#[0]]=#[1];");
     };
-    CoreDirectives.prototype.comment = function () {
-        return;
-    };
     CoreDirectives.prototype.macro = function () {
-        return this.exec("$[#[0]]=function(){var name=#[0];var call=$[name];var args=[].slice.call(arguments);var out = \"\";");
+        return this.exec("$[#[0]]=function(){var name=#[0];var call=$[name];var args=[].slice.call(arguments);var out = \"\";", false);
     };
     CoreDirectives.prototype.endmacro = function () {
         return "return out;}";
@@ -494,6 +496,12 @@ exports.MiscDirectives = void 0;
 var MiscDirectives = /** @class */ (function () {
     function MiscDirectives() {
     }
+    /**
+     * Used to add comments to templates
+     */
+    MiscDirectives.prototype.comment = function () {
+        return;
+    };
     /**
      * Includes a template if it exists only
      */

@@ -1,12 +1,11 @@
 const fs = require('fs');
 const docs = require('typedoc');
-const wax = require('../dist/waxe');
-const { resolve } = require('path')
+const Wax = require('../dist/waxe');
+const { resolve, basename, dirname } = require('path')
 const glob = require('glob');
-const cwd = process.cwd();
-const srcObj = glob.sync('src/**/*.waxe', {
-    cwd: module.path
-});
+const cwd = module.path;
+const cdir = process.cwd();
+const srcObj = glob.sync('src/**/*.waxe', { cwd });
 
 async function main() {
     const app = new docs.Application();
@@ -21,18 +20,29 @@ async function main() {
     
     if (project) {
         const outputDir = '_dist/api';
-        //this is used for special cases ;)
-        process.chdir(cwd);
+        // this is used for special cases ;)
+        process.chdir(cdir);
         await app.generateDocs(project, outputDir);
+        
+        Wax.setConfig('strip', false);
+        Wax.directive('url', function(){
+            return this.write(`'/' + (#[1] == 'asset' ? 'api/assets': #[1] || '') + '/' + #[0]`);
+        });
         srcObj.forEach(src => {
-            const path = resolve(module.path, src);
+            const path = resolve(cwd, src);
             const outPath = src.replace('src', '_dist').replace('waxe', 'html');
-            const tpl = wax.template(src.replace('src/', ''), fs.readFileSync(path).toString());
-            try {
-            fs.writeFileSync(outPath, tpl.call({}) || '')
-            } catch(e){}
+            const tpl = Wax.template(src.replace('src/', ''), fs.readFileSync(path).toString());
+            // do not output layout templates
+            if(src.indexOf('src/_') !== 0) {
+                const dir = dirname(outPath);
+                const file = basename(outPath);
+                if(!fs.existsSync(dir)){
+                    fs.mkdirSync(dir);
+                }
+                fs.writeFileSync(outPath, tpl({ project, file, src }));
+            }
         });
     }
 }
 
-main(process.chdir(module.path)).catch(console.error);
+main(process.chdir(cwd)).catch(console.error);

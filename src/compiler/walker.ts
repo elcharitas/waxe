@@ -48,7 +48,7 @@ export class Walker implements WaxWalker {
                 argLiteral: WaxLiteral = this.toArgs(argList);
             //handle template extending specially
             if(tag === "extends" && position === 0){
-                layout = parseString(`+$template(#[0])`, argLiteral);
+                layout = parseString(`+$template(${argLiteral})`);
                 return text = text.replace(rawBlock, '');
             }
             text = text.replace(rawBlock, `";${traverseNode(this, { tag, argLiteral, block, position, configs, context: configs.context })}\n${out}+="`);

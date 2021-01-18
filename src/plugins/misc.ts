@@ -3,6 +3,13 @@ export class MiscDirectives {
     [name: string]: WaxDescriptor;
 
     /**
+     * Used to add comments to templates
+     */
+    public comment(): string {
+        return;
+    }
+
+    /**
      * Includes a template if it exists only
      */
     public includeIf(this: WaxNode): string {

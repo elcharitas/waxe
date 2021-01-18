@@ -11,12 +11,8 @@ export class CoreDirectives {
         return this.exec(`$[#[0]]=#[1];`);
     }
 
-    public comment(): string {
-        return;
-    }
-
     public macro(this: WaxNode): string {
-        return this.exec(`$[#[0]]=function(){var name=#[0];var call=$[name];var args=[].slice.call(arguments);var out = "";`);
+        return this.exec(`$[#[0]]=function(){var name=#[0];var call=$[name];var args=[].slice.call(arguments);var out = "";`, false);
     }
     
     public endmacro(): string {
