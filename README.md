@@ -85,7 +85,7 @@ Copyright © 2021 [Jonathan Irhodia](https://github.com/elcharitas).
 This project is [MIT][3] licensed.
 
 [0]: https://github.com/elcharitas/waxe
-[1]: https://img.shields.io/badge/version-0.0.7-yellow.svg
+[1]: https://img.shields.io/badge/version-0.0.8-yellow.svg
 [2]: https://npmjs.org/package/waxe
 [3]: https://github.com/elcharitas/waxe/blob/master/LICENSE
 [5]: https://github.com/elcharitas/waxe#readme

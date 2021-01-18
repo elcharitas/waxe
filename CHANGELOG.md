@@ -5,9 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.0.8] (2021-01-18)
 ### Added
+- Support for native urls
+- @section and @show directives
 - Eslint to check coding styles
-- Added buildURL helper for docs
+- `buildURL` helper for docs
 
 ### Changed
 - Immutate WaxDelimiter.endPrefix
@@ -97,6 +101,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [0.0.5]: https://github.com/elcharitas/waxe/releases/tag/0.0.5
 [0.0.6]: https://github.com/elcharitas/waxe/releases/tag/0.0.6
 [0.0.7]: https://github.com/elcharitas/waxe/releases/tag/0.0.7
+[0.0.8]: https://github.com/elcharitas/waxe/releases/tag/0.0.8
 
 [1]: https://waxe.now.sh
 [2]: https://codeclimate.com/github/elcharitas/waxe
