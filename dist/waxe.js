@@ -250,9 +250,9 @@ exports.traverseNode = traverseNode;
 function parseString(literal, argLiteral, createScope) {
     var list = literal.split('');
     var inString = null;
-    list.forEach(function (char, index) {
-        var nextChar = list[index + 1];
-        if (char != inString && (inString === '"' || inString === '\'')) {
+    list.forEach(function (char, index, list, nextChar) {
+        if (nextChar === void 0) { nextChar = list[index + 1]; }
+        if (!inString && char.match(/["']/)) {
             inString = char;
         }
         else if (inString === char) {
@@ -276,10 +276,7 @@ function parseString(literal, argLiteral, createScope) {
         }
         list[index] = char;
     });
-    if (createScope === true) {
-        return "new Function(" + strfy('return ' + list.join('')) + ").apply(this,[" + (argLiteral ? argLiteral.text() : '') + "]);";
-    }
-    return list.join('');
+    return createScope === true ? "new Function(" + strfy('return ' + list.join('')) + ").apply(this,[" + (argLiteral ? argLiteral.text() : '') + "]);" : list.join('');
 }
 exports.parseString = parseString;
 /**
@@ -479,21 +476,39 @@ var CoreDirectives = /** @class */ (function () {
     CoreDirectives.prototype.endsection = function () {
         return this.exec("return out});delete _block", false);
     };
+    /**
+     * Displays a block
+     */
     CoreDirectives.prototype.show = function () {
-        return this.argLiteral.length > 0 ? this.write("$__env[#[0]].bind(this)()") : this.exec("return out});out+=_block.bind(this)()", false);
+        return this.argLiteral.length > 0 ? this.write("$__env[#[0]].bind(this)()") : this.exec("return out});out+=_block.bind(this)();delete _block", false);
     };
+    /**
+     * Creates a new macro
+     */
     CoreDirectives.prototype.macro = function () {
         return this.exec("$[#[0]]=(function(){var name=#[0];var call=$[name];var args=[].slice.call(arguments);var out = \"\";", false);
     };
+    /**
+     * Closes a macro and binds the context
+     */
     CoreDirectives.prototype.endmacro = function () {
         return "return out;}).bind(this)";
     };
+    /**
+     * Includes a template.
+     */
     CoreDirectives.prototype.include = function () {
         return this.write("$template(#[0],#[1])");
     };
+    /**
+     * Outputs a value
+     */
     CoreDirectives.prototype.yield = function () {
         return this.write("(" + this.configs.autoescape + "?$escape:String)(#[0]||#[1])");
     };
+    /**
+     * If conditional directive
+     */
     CoreDirectives.prototype.elseif = function (literal) {
         return "}else if(" + literal + "){";
     };
@@ -506,22 +521,40 @@ var CoreDirectives = /** @class */ (function () {
     CoreDirectives.prototype.case = function (literal) {
         return "*/case " + literal + ":";
     };
+    /**
+     * Conditional loop/switch breaking
+     */
     CoreDirectives.prototype.break = function (literal) {
         return literal.length === 0 ? 'break/*' : "if(" + literal.text() + "){break}";
     };
+    /**
+     * Conditional loop/switch continue
+     */
     CoreDirectives.prototype.continue = function (literal) {
         return "if(" + (literal.text() || literal.length == 0) + "){continue}";
     };
+    /**
+     * Close a switch statement
+     */
     CoreDirectives.prototype.endswitch = function () {
         return '*/}';
     };
+    /**
+     * Forelse directive
+     */
     CoreDirectives.prototype.forelse = function (literal) {
         var obj = literal.text().split(/\s+/)[2];
         return "var loopObj=" + obj + ";for" + literal + "{";
     };
+    /**
+     * When a loopObj is empty
+     */
     CoreDirectives.prototype.empty = function () {
         return "} if(typeof loopObj!==\"object\"||Object.keys(loopObj).length<1){";
     };
+    /**
+     * Close a forelse
+     */
     CoreDirectives.prototype.endforelse = function () {
         return "};delete loopObj;";
     };

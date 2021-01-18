@@ -127,9 +127,8 @@ export function parseString(literal: WaxLiteral, argLiteral?: WaxLiteral, create
     const list: string[] = literal.split('');
     let inString: string = null;
 
-    list.forEach((char: string, index: number) => {
-        const nextChar: string = list[index + 1];
-        if (char != inString && (inString === '"' || inString === '\'')) {
+    list.forEach((char: string, index: number, list: string[], nextChar: string = list[index + 1]) => {
+        if (!inString && char.match(/["']/)) {
             inString = char;
         }
         else if(inString === char) {
@@ -155,10 +154,7 @@ export function parseString(literal: WaxLiteral, argLiteral?: WaxLiteral, create
         list[index] = char;
     });
     
-    if(createScope === true){
-        return `new Function(${strfy('return '+list.join(''))}).apply(this,[${argLiteral ? argLiteral.text() : ''}]);`;
-    }
-    return list.join('');
+    return createScope === true ? `new Function(${strfy('return '+list.join(''))}).apply(this,[${argLiteral ? argLiteral.text() : ''}]);`: list.join('');
 }
 
 /**
