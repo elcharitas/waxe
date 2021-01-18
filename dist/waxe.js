@@ -15,25 +15,34 @@ function conflictProp(context, props) {
     return context;
 }
 function parsePath(path, base_path) {
-    if (path.charAt(0) == "/") {
+    if (base_path === '') {
+        base_path = '/';
+    }
+    if (base_path.indexOf('/') < 0) {
+        base_path += '/path';
+    }
+    if (path.indexOf(base_path) === 0 || path.match(/^(\/|\w)/)) {
         return path;
     }
-    else if (path.substring(0, 2) == "./") {
-        path = "." + path;
+    else if (path.substring(0, 2) === './') {
+        path = '/.' + path;
     }
     else {
-        path = "../" + path;
+        if (base_path === '/') {
+            base_path = '/path';
+        }
+        path = '/../' + path;
     }
     return base_path + path;
 }
 function absolutePath(path, base_path) {
     if (base_path === void 0) { base_path = '/'; }
     path = parsePath(path, base_path);
-    while (/\/\.\.\//.test(path = path.replace(/[^\/]+\/+\.\.\//g, "")))
+    while (/\/\.\.\//.test(path = path.replace(/[^/]*\/+\.\.\//g, "")))
         ;
     /* Escape certain characters to prevent XSS */
-    path = path.replace(/\.$/, "").replace(/\/\./g, "").replace(/"/g, "%22")
-        .replace(/'/g, "%27").replace(/</g, "%3C").replace(/>/g, "%3E");
+    path = path.replace(/\.$/, '').replace(/\/\./g, '').replace(/"/g, '%22')
+        .replace(/'/g, '%27').replace(/</g, '%3C').replace(/>/g, '%3E');
     return path;
 }
 exports.absolutePath = absolutePath;
@@ -111,11 +120,15 @@ var WaxConfig = {
         },
         template: function (id, context, safe) {
             if (context === void 0) { context = {}; }
-            var template = require('../waxe').template(id);
+            var prevId = this.id;
+            var template = require('../waxe').template(absolutePath(id, prevId));
             if (safe !== true && !template) {
-                debug_1.debug("can't extend " + id + "!", template, WaxTemplate);
+                debug_1.debug("no template: " + id + "!", template, WaxTemplate);
             }
-            return (template || WaxTemplate)(context);
+            this.id = id;
+            var value = (template || WaxTemplate)(context);
+            this.id = prevId;
+            return value;
         }
     })
 };
@@ -687,6 +700,9 @@ module.exports = (_a = /** @class */ (function () {
         Wax.template = function (name, source) {
             if (typeof source === 'string') {
                 this.core.templates[name] = parser_1.parseTemplate(name, source, Wax);
+            }
+            else {
+                this.global('id', name);
             }
             return this.core.templates[name];
         };

@@ -14,6 +14,7 @@
     "build": "npm run build:src && npm run build:dist && npm run build:ugly",
     "docs": "cd docs && node generate.js",
     "lint": "eslint waxe.d.ts src",
+    "lint:fix": "eslint waxe.d.ts src --fix",
     "prepublishOnly": "rm -rf lib && npm run build && npm t",
     "sample": "node lib/cli.js render samples/index.waxe > samples/index.htm",
     "test": "mocha"

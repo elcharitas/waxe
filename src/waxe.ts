@@ -96,6 +96,8 @@ export = class Wax implements Wax {
     {
         if(typeof source === 'string') {
             this.core.templates[name] = parseTemplate(name, source, Wax);
+        } else {
+            this.global('id', name);
         }
         
         return this.core.templates[name];

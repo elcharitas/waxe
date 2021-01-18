@@ -2,7 +2,7 @@ const fs = require('fs');
 const docs = require('typedoc');
 const Wax = require('../lib/waxe');
 const { absolutePath } = require('../lib/compiler');
-const { resolve, basename, dirname } = require('path')
+const { resolve, basename, dirname } = require('path');
 const glob = require('glob');
 const cwd = module.path;
 const cdir = process.cwd();
@@ -28,7 +28,7 @@ async function main() {
         Wax.setConfig('strip', false);
         Wax.directive('url', function(){
             this.context.path = absolutePath;
-            return this.write(`$path(#[0], #[1] == 'asset' ? './api/assets/path/': #[1] || './')`);
+            return this.write(`$path(#[0], #[1] == 'asset' ? './api/assets/~': #[1] || './')`);
         });
         srcObj.forEach(src => {
             const path = resolve(cwd, src);
